@@ -42,16 +42,85 @@
                     }
                 }
             }
-
+            function convertHashrate(num){
+                var hrate_check = parseFloat(num)
+                if(!hrate_check){
+                    return false
+                }
+                if(hrate_check < 1.0){
+                    hr =(hrate_check*1000).toFixed(2) + ' h/s' 
+                    
+                }else if(hrate_check > 1000){
+                    hr =(hrate_check/1000).toFixed(3) + ' kh/s' 
+                    
+                }else if(hrate_check > 10000){
+                    hr =(hrate_check/10000).toFixed(4) + ' mh/s' 
+                    
+                }
+                return hr
+            }
             getHiveData = function(){
                 var endPoint = '/api'
                 $.getJSON(endPoint,function(data){
                     console.log(data)
                     if(typeof data != 'undefined'){
-                        console.log(data)
-                        for(var farm in data){
+                        var minerStats= data.minerstats
+                        /*
+                            {467468: Array(2)}467468: Array(2)0: algo: "cuckaroo29s"bus_numbers: (6) [1, 4, 5, 12, 13, 16]coin: "XWP"fans: (6) [33, 26, 38, 26, 22, 22]hashes: (6) [0.0046500000000000005, 0.00319, 0.00459, 0.00309, 0.00316, 0.00315]miner: "gminer"temps: (6) [62, 66, 63, 66, 64, 64]__proto__: Object1: {miner: "cryptodredge", algo: "mtp", coin: "XZC", hashes: Array(5), temps: Array(5), …}length: 2__proto__: Array(0)__proto__: Object
+
+                        */
+                        // reform minerStats for easier referencing ?
+                        var minerStatsRef={}
+
+                        for(var farm in data.farms){
+
+                             var minerStats_digest=['<ul>']
+                            var miners_stats =[]
+                             for(var workerId in minerStats){
+                                var miners = minerStats[workerId]
+                                miners.filter(function(w){
+                                    if(typeof minerStatsRef[workerId] == 'undefined'){
+                                        minerStatsRef[workerId] ={}
+                                    }
+                                    var minerWorkerGuid=w.miner+'_'+w.algo+'_'+w.coin
+
+                                    if(typeof minerStatsRef[workerId][w.miner] == 'undefined'){
+
+                                    }
+                                    var concatDatas=[]
+                                    w.bus_numbers.filter(function(b,i){
+                                         // card title
+                                        // force string for lookup
+                                        var b2 = b+''
+                                        var row = {
+                                       //     cardTitle : workers_ref[workerId][b2],
+                                            workerId : workerId,
+                                            bus_number : b,
+                                            fans : w.fans[i],
+                                            hashes: w.hashes[i],
+                                            temps : w.temps[i],
+                                            algo : w.algo
+                                        }
+                                       
+                                       // var workerCardTitle = workers_ref[workerId][b2]
+                                        if(typeof miners_stats[workerId] == 'undefined'){
+                                            miners_stats[workerId] = {}
+                                        }
+                                        if(typeof miners_stats[workerId][b2] == 'undefined'){
+                                            miners_stats[workerId][b2] ={}
+                                        }
+                                        miners_stats[workerId][b2]=row
+                                    })
+                                    // bus_numbers
+                                    // fans
+                                    // hashes
+                                    // temps
+
+                                })
+                            }
+
                             var output=['<ul>']
-                            var f = data[farm]
+                            var f = data.farms[farm]
                             var fieldsNames=[
                                 'Idle Power Draw',
                                 'Farm Name',
@@ -95,6 +164,7 @@
                             hashrates_by_coin.push('</ul>')
                         
                             var workers_digest=['<ul>']
+                            var workers_ref={}
                             var workerClickGuids = []
                             for(var workerId in f.workers){
                                 var theWorker = f.workers[workerId]
@@ -112,12 +182,44 @@
                                     //attach click handler
                                     workerClickGuids.push(domGuid)
                                     wrk.filter(function(w){
-                                        workers_digest.push('<span>'+w.idx+'&nbsp;</span>')
+                                    
+                                        
+                                        console.log(workerId)
+                                        var cardStats=undefined
+                                        
+                                        if(typeof miners_stats[workerId] != 'undefined' && typeof miners_stats[workerId][w.bus_number+''] != 'undefined'){
+                                            cardStats = miners_stats[workerId][w.bus_number+'']
+
+                                            workers_digest.push('<table><tr><th>'+w.idx+'</th><td>'+cardStats.fans+'%</td><td>'+cardStats.algo+'&nbsp;'+convertHashrate(cardStats.hashes)+'</td></tr></table>')
+
+                                        }else{
+                                            workers_digest.push('<span>'+w.idx+'</span>')
+                                        }
+
+                                        // fans hashes temps
+                                        
+                                        // for combining with data below
+                                        if(typeof workers_ref[workerId] == 'undefined'){
+                                            workers_ref[workerId]={}
+                                        }
+                                        if(typeof workers_ref[workerId][w.bus_number] == 'undefined'){
+                                            workers_ref[workerId][w.bus_number]={}
+                                        }
+                                        // data to pass/ref
+                                        workers_ref[workerId][w.bus_number]=gpuModel
+                                        
+
                                     })
                                     workers_digest.push('</li>')
+
+                                       
                                 }
                             }
+                            console.log(workers_ref)
                             workers_digest.push('</ul>')
+
+
+                           
 
                         }
                         if(output.length > 2){
@@ -150,6 +252,7 @@
                             }
                             // add click handlers   
                         }
+
                     }
                 })
             }

@@ -30,6 +30,7 @@ if(typeof config.hiveosAccessToken != 'undefined' && typeof config.hiveosLogin !
             return getFarmWorkersGpus().then((r)=>{
                 console.log(r)
             })
+            // i dont think i need this...
             return getAllWorkers().then((r) => {
 
                 let farm = []
@@ -43,12 +44,7 @@ if(typeof config.hiveosAccessToken != 'undefined' && typeof config.hiveosLogin !
                         var byCard = []
                         for(let k in theWorker){
                             if(exclude.indexOf(k) > -1){
-
-                                console.log(':'+k+':')
-                                //
-                                //result[k]={}
                                 var theRow = {}
-
                                 if(k == 'gpu_summary'){
                                     result[k]=theWorker[k]['gpus']
                                 }else if(k == 'gpu_info'){
@@ -56,7 +52,6 @@ if(typeof config.hiveosAccessToken != 'undefined' && typeof config.hiveosLogin !
                                     let rows = []
                                     t.filter(function(x){
                                         let card = x
-
                                         // convert power limits from 'W' to integers
                                         for(let l in card.power_limit){
                                             let limit = card.power_limit[l]
@@ -88,18 +83,11 @@ if(typeof config.hiveosAccessToken != 'undefined' && typeof config.hiveosLogin !
                                     // gpu summary probably.... 
                                     theRow=theWorker[k]
                                 }
-
                                 result[w.name]=theRow
-                            }else{
-                                //console.log(k)
                             }
                         }
-                        //throw false 
-
                     })
-                    
                     return result
-
                 }
                 // potentially write the filtered result to a datastore 
                 // but for now just write to console, handy es6 syntax FTW!
@@ -130,8 +118,18 @@ if(typeof config.hiveosAccessToken != 'undefined' && typeof config.hiveosLogin !
     app.get('/api', function(request, response) {
         response.setHeader('Content-Type', 'application/json');
         //console.log(hiveMiners)
-        response.send(JSON.stringify(hiveFarms));
+        response.send(JSON.stringify({
+            farms:hiveFarms,
+            minerstats:hiveMinerStats
+        }));
     })
+
+    app.get('/minerstats', function(request, response) {
+        response.setHeader('Content-Type', 'application/json');
+        //console.log(hiveMiners)
+        response.send(JSON.stringify(hiveMinerStats));
+    })
+    
     /*
      *
      * EXPRESS JS APP 
@@ -141,35 +139,29 @@ if(typeof config.hiveosAccessToken != 'undefined' && typeof config.hiveosLogin !
     const baseUrl = 'https://api2.hiveos.farm/api/v2';
     const fetch = require('node-fetch');
     var accessToken = config.hiveosAccessToken;
-         hiveMiners = {}
-     hiveFarms = {}
+    hiveMiners = {}
+    hiveMinerStats = {}
+    hiveFarms = {}
+    hiveWorkers={}
     var mainFarmId = 0
     // returns json or a rejected promise
     var normalPromiseCb = function(r){
-        if (!r.ok) {
-            r.json().then(data => {
-                console.error(data.message || 'Response error');
-            });
-            return Promise.reject(r);
-        }
-        else {
-
-            return r.json();
-        }
-    }
-    // returns a promise (for queues)
-    var queuedPromiseCb = function(r){
-        if (!r.ok) {
-            r.json().then(data => {
-                console.error(data.message || 'Response error');
-            });
-            return Promise.reject(r);
-        }
-        else {
-
-            return r;
+        if(typeof r != 'undefined'){
+            if (!r.ok) {
+                r.json().then(data => {
+                    console.error(data.message || 'Response error');
+                });
+                return Promise.reject(r);
+            }
+            else {
+                return r.json();
+            }
+        }else{
+            console.log("Something broke the promise.")
+            return false
         }
     }
+
     function doLogin (login, password) {
         return  fetch(`${baseUrl}/auth/login`, {
             method: 'POST',
@@ -197,32 +189,32 @@ if(typeof config.hiveosAccessToken != 'undefined' && typeof config.hiveosLogin !
     function getAllWorkers() {
         return fetchUrl('farms').then(normalPromiseCb).then(r=>{
             const reduceMiner=function(w){
-                let r = false
+              let r = false
               if(typeof w.data != 'undefined'){
                     let farm = w.data
                     hiveFarms[farm.id] = (typeof hiveFarms[farm.id] == 'undefined' ? {} : farm)
                     r = farm
-                   
-                }
+              }
               return r
             }
-                if(r.data.length > 0){
-                    let data = []
-                    r.data.filter(function(farm){
-                         data.push(fetchUrl(`/farms/${farm.id}/workers`).
-                            then(normalPromiseCb).
-                                then(reduceMiner).
-                                    catch(defaultError));
-                    })
-                    return data
-                  
-                }else{
-               
-                    return hiveFarms
-                }
-                return r
+            if(r.data.length > 0){
+                let data = []
+                r.data.filter(function(farm){
+                     data.push(fetchUrl(`/farms/${farm.id}/workers`).
+                        then(normalPromiseCb).
+                            then(reduceMiner).
+                                catch(defaultError));
+                })
+                return data
+              
+            }else{
+           
+                return hiveFarms
+            }
+            return r
         });
     }
+    
     function getFarms() {
         return fetchUrl('farms').then(normalPromiseCb)
     }
@@ -251,63 +243,130 @@ if(typeof config.hiveosAccessToken != 'undefined' && typeof config.hiveosLogin !
                         console.log("FARM " + w.id + " UPDATED")
                         // HMM.... might be faster to just replace it rather than check.
                     }
-                    farmWorkersGpus.push(fetchUrl(`farms/${w.id}/workers/gpus`).then(normalPromiseCb))        
+                    farmWorkersGpus.push(fetchUrl(`farms/${w.id}/workers`).then(normalPromiseCb))        
                 })
             }
-
-            return Promise.all(
-            farmWorkersGpus).then(function(vals){
-                var GPUS=[]
-                vals.filter(function(v){
-                    var dat = v.data
-                    v.data.filter(function(gpu){
-                        var newGpu = {
-                            idx: gpu.index,
-                            model: gpu.model,
-                            worker : gpu.worker,
-                            min: gpu.power_limit.min,
-                            max: gpu.power_limit.max,
-                            def: gpu.power_limit.def
-                        }
-                        // for this would be accessing in a data tree
-                        // with key values ... only show the power information available
-                        var minimumGpuData={
-                            idx: gpu.index,
-                            min: gpu.power_limit.min,
-                            max: gpu.power_limit.max,
-                            def: gpu.power_limit.def
-                        }
-                        if(typeof hiveMiners[gpu.worker] == 'undefined'){
-                            hiveMiners[gpu.worker]=[]
-                        }
-                        var farmId = gpu.worker.farm_id
-                        var workerId = gpu.worker.id
-
-                        // cross ref existing worker in existing var
-                        if(typeof hiveFarms[farmId] != 'undefined'){
-                            //hiveFarms[workerId][]
-                            if(typeof hiveFarms[farmId]['workers'] == 'undefined'){
-                                hiveFarms[farmId]['workers'] = {}
+            if(typeof farmWorkersGpus != 'undefined' && farmWorkersGpus.length > 0){
+                return Promise.all(farmWorkersGpus)
+                .then(
+                    function(vals){
+                        var GPUS=[]
+                        vals.filter(function(v){
+                            v.data.filter(function(d){
+                                var worker = {}
+                                var workerId = d.id
+                                var farmId = d.farmId
+                                // pre process
+                                for(var key in d){
+                                    var keys = ['id','farm_id','name','units_count',
+                                                'active','ip_addresses','remote_address',
+                                                'has_amd','has_nvidia','flight_sheet',
+                                                'overclock','miners_summary','miners_stats',
+                                                'gpu_info','gpu_summary','gpu_stats','miners_summary']
+                                    if(keys.indexOf(key) > -1){
+                                        if(key == 'remote_address'){
+                                            worker[key]=d[key]['ip']
+                                        }else if(key == 'miners_summary' || key == 'miners_stats'){
+                                            worker[key]=d[key]['hashrates']
+                                            if(key == 'miners_stats'){
+                                                if(typeof hiveMinerStats[workerId] == 'undefined'){
+                                                    hiveMinerStats[workerId]=[]
+                                                }
+                                                hiveMinerStats[workerId]=worker[key]
+                                            }
+                                        }else if(key == 'gpu_summary'){
+                                            worker[key]=d[key]
+                                        }else if(key == 'gpu_info'){
+                                            var gpu_info = d[key]
+                                            //  give ref keys to combine hashrates clientside
+                                             gpu_info.filter(function(gpu){
+                                                var newGpu = {
+                                                    idx: gpu.index,
+                                                    bus:gpu.bus,
+                                                    bus_number:gpu.bus_number,
+                                                    model: gpu.model,
+                                                    min: gpu.power_limit.min,
+                                                    max: gpu.power_limit.max,
+                                                    def: gpu.power_limit.def
+                                                }
+                                                // for this would be accessing in a data tree
+                                                // with key values ... only show the power information available
+                                                var minimumGpuData={
+                                                    idx: gpu.index,
+                                                    min: gpu.power_limit.min,
+                                                    max: gpu.power_limit.max,
+                                                    def: gpu.power_limit.def,
+                                                    bus_number:gpu.bus_number
+                                                }
+                                                if(typeof hiveMiners[gpu.worker] == 'undefined'){
+                                                    hiveMiners[gpu.worker]=[]
+                                                }
+                                                var farmId = d.farm_id
+                                                var workerId = d.id
+                                               
+                                                // cross ref existing worker in existing var
+                                                if(typeof hiveFarms[farmId] != 'undefined'){
+                                                    //hiveFarms[workerId][]
+                                                    if(typeof hiveFarms[farmId]['workers'] == 'undefined'){
+                                                        hiveFarms[farmId]['workers'] = {}
+                                                    }
+                                                    if(typeof hiveFarms[farmId]['workers'][workerId] == 'undefined'){
+                                                        hiveFarms[farmId]['workers'][workerId] = {}
+                                                    }
+                                                    if(typeof hiveFarms[farmId]['workers'][workerId]['gpus'] == 'undefined'){
+                                                        hiveFarms[farmId]['workers'][workerId]['gpus']={}
+                                                    }
+                                                    if(typeof hiveFarms[farmId]['workers'][workerId]['gpus'][gpu.model] == 'undefined'){
+                                                        hiveFarms[farmId]['workers'][workerId]['gpus'][gpu.model]=[]
+                                                    }
+                                                    hiveFarms[farmId]['workers'][workerId]['gpus'][gpu.model].push(minimumGpuData)
+                                                }else{
+                                                    console.log("COULD NOT FIND")
+                                                    // probaby return a promise rejection?
+                                                    // or force refresh something then try same method again.
+                                                    console.log(farmId)
+                                                }
+                                                GPUS.push(newGpu)
+                                            })
+                                        }
+                                        else if(key == 'gpu_stats'){
+                                            var gpuStats=d[key]
+                                            var gpuRows=[]
+                                            worker[key]=[]
+                                            gpuStats.filter(function(g){
+                                                worker[key].push({
+                                                    temp: g.temp,
+                                                    fan: g.fan,
+                                                    power: g.power,
+                                                    is_overheated: g.is_overheated,
+                                                    bus_info: g.bus_id + '#'+g.bus_number
+                                                })
+                                            })
+                                        }else{
+                                            worker[key]=d[key]
+                                        }
+                                    }
+                                }
+                            })
+                            if(typeof miners_stats != 'undefined' && typeof miners_stats.hashrates != 'undefined'){
+                                miners_stats.hashrates.filter(function(m){
+                                    var newM={}
+                                    // filter fields; im using all except dual mined coins.
+                                    var fields=['miner','ver','algo','coin','hash','shares']
+                                    for(var k in m){
+                                        if(fields.indexOf(k) > -1){
+                                            newM[k]=m[k]
+                                        }
+                                    }
+                                })
                             }
-                            if(typeof hiveFarms[farmId]['workers'][workerId] == 'undefined'){
-                                hiveFarms[farmId]['workers'][workerId] = {}
-                            }
-                            if(typeof hiveFarms[farmId]['workers'][workerId]['gpus'] == 'undefined'){
-                                hiveFarms[farmId]['workers'][workerId]['gpus']={}
-                            }
-                            if(typeof hiveFarms[farmId]['workers'][workerId]['gpus'][gpu.model] == 'undefined'){
-                                hiveFarms[farmId]['workers'][workerId]['gpus'][gpu.model]=[]
-                            }
-                            hiveFarms[farmId]['workers'][workerId]['gpus'][gpu.model].push(minimumGpuData)
-                        }else{
-                            console.log("COULD NOT FIND")
-                            console.log(farmId)
-                        }
-                        GPUS.push(newGpu)
-                    })                        
-                })
-                return GPUS
-            }).catch(defaultError)
+                        })
+                        return GPUS
+                    }).catch(defaultError)
+                }else{
+                    // no farms to lookup
+                    console.log('farmWorkersGpus - undefined')
+                }
         })
     }
     // IN PROGRESS!! Once i figure out how to deflate the gzip response properly
@@ -315,7 +374,6 @@ if(typeof config.hiveosAccessToken != 'undefined' && typeof config.hiveosLogin !
         // pass farmId to this one
         // get famrs first
         getFarms().then(function(r,e){
-            //console.log(e,r)
             var farms = []
             if(typeof e == 'undefined' || e == null || !e){
                 // check for data attr.
@@ -328,7 +386,6 @@ if(typeof config.hiveosAccessToken != 'undefined' && typeof config.hiveosLogin !
             return farms
         }).then(function(farms){
             farms.filter(function(f){
-                console.log('farms/'+f+'/fs')
                 fetchUrl('farms/'+f+'/fs').then(function(r,e){
                     console.log('fetch farms flight sheet' + f + ' error?:' + e)
                     // TODO Either use something other than fetch / fetchURL (prolly request..)
@@ -340,12 +397,15 @@ if(typeof config.hiveosAccessToken != 'undefined' && typeof config.hiveosLogin !
             })
         })
         //return fetchUrl('farms/'+farmId+'/fs').then(normalPromiseCb)
-
     }
 
     function defaultError(e){
         console.log('General error')
-        console.log(e)
+        if(typeof e.message != 'undefined'){
+            console.log(e.message)
+        }else{
+            console.log(e)
+        }
     }
     function getWorkers() {
         if(mainFarmId !== 0){
@@ -365,8 +425,6 @@ if(typeof config.hiveosAccessToken != 'undefined' && typeof config.hiveosLogin !
                     }
                 })
         }else if(typeof config.hiveosAccessToken != 'undefined' && typeof config.hiveosLogin != 'undefined' && typeof config.hiveosPass != 'undefined'){
-            // do login and then try
-            //console.log("Attempting login within fetchURL")
             return doLogin(config.hiveosLogin, config.hiveosPass).then(function(){
                 return fetchUrl(url)
             }).catch(defaultError)
