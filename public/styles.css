@@ -1,3 +1,10 @@
 .hiveContainer,.hiveContainer ul{
 	list-style-type: none;	
 }
+.wrk_idx,.wrk_temp,.wrk_fans{
+	width:35px;
+	text-align: center;
+}
+.wrk_fans{
+	width:10px;
+}
