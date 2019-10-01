@@ -8,3 +8,9 @@
 .wrk_fans{
 	width:10px;
 }
+.hhBox{
+	width:2%;
+	height:20px;
+	border-color:black;
+	float:left;
+}
