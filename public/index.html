@@ -18,13 +18,13 @@
         </div>
         <div class="hiveContainer" id="hiveSelectedIdxs">
         </div>
-        <div class="hiveContainer" id="hiveFarmData">
-        </div>
+
         <div class="hiveContainer" id="hiveHashrateData">
         </div>
         <div class="hiveContainer" id="hiveWorkersData">
         </div>
-
+        <div class="hiveContainer" id="hiveFarmData">
+        </div>
 
         <script>            
     
@@ -82,15 +82,10 @@
                 var step = 5
                 var count = 1
                 var r = []
-                console.log(count,step,step/100)
                 while(count < 100/step){
-                    console.log(count)
-                    console.log(step)
                     var style = 'background-color:'+d3ColorCodeInverse(step * count)+';'
                     r.push('<div style="'+style+'">'+step*count+'</div>')
                     count++
-                    console.log(count)
-                    console.log(step)
                 }
                 writeToDom('colorRefScale',r)
             }
@@ -117,7 +112,6 @@
             getHiveData = function(){
                 var endPoint = '/api'
                 $.getJSON(endPoint,function(data){
-                    console.log(data)
                     if(typeof data != 'undefined'){
                         var minerStats= data.minerstats
                         /*
@@ -258,7 +252,6 @@
                                         var cardStats=undefined
                                         if(typeof miners_stats[workerId] != 'undefined' && typeof miners_stats[workerId][w.bus_number+''] != 'undefined'){
                                             cardStats = miners_stats[workerId][w.bus_number+'']
-                                            console.log(cardStats)
                                             var cHashRate=convertHashrate(cardStats.hashes,true)
                                             var cHashRateString = convertHashrate(cardStats.temps)
                                             var cTemp = cardStats.temps
@@ -306,20 +299,29 @@
                                                     }       
                                                     return Math.floor(percent);
                                                 }
-                                                hh.reverse().filter(function(hashrate,i){
+                                                // keep the number of elements in hh to 50
+                                                var shouldShift = false
+                                                hh.filter(function(hashrate,i){
                                                     if(i < 50){
                                                         var perIn= (i > 1 ? percIncrease(convertHashrate(hashrate),convertHashrate(hh[i-1])) : 0)
-                                                        
-                                                        console.log(hashrate,convertHashrate(hashrate),perIn )
+                                                        //console.log(hashrate,convertHashrate(hashrate),perIn )
 
                                                         var hrStyle = d3ColorCodeNegative(convertHashrate(hashrate) * perIn)
                                                         historicalHashrates += "<div class='hhBox' style='background-color:"+hrStyle+";'>&nbsp;</div>"
                                                     }else{
                                                         // clear ?
+                                                        // OVERFLOW?
+                                                        shouldShift = true
                                                     }
                                                 })
+                                                if(shouldShift){
+                                                    hh.shift()
+                                                }else{
+                                                }
+                                                    console.log('HH LENGTH: ' + hh.length)
+
                                                 historicalHashrates += "</td></tr>"
-                                                console.log(historicalHashrates)
+                                                //console.log(historicalHashrates)
                                             }
                                             workers_digest.push(
                                                 '<table><tr><th class="wrk_idx">'+
@@ -353,11 +355,7 @@
                                        
                                 }
                             }
-                            console.log(workers_ref)
                             workers_digest.push('</ul>')
-
-
-                           
 
                         }
                         if(output.length > 2){
