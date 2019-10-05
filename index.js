@@ -26,10 +26,14 @@ if(typeof config.hiveosAccessToken != 'undefined' && typeof config.hiveosLogin !
         console.log(`Hivectrl listening on port ${port}!`)
         hiveData = {}
         hiveFarms = {}
+        getFlightsheets().then(function(){
+                console.log(hiveFlightsheets)
+        }).catch(defaultError)
+
         let getAllWorkersLoop = function(){
-            return getFarmWorkersGpus().then((r)=>{
-                console.log(r)
-            })
+            
+            return getFarmWorkersGpus()
+
             // i dont think i need this...
             return getAllWorkers().then((r) => {
 
@@ -112,7 +116,8 @@ if(typeof config.hiveosAccessToken != 'undefined' && typeof config.hiveosLogin !
 
     app.get('/flightsheets',function(request,response){
         response.setHeader('Content-Type', 'application/json');
-        getFlightsheets()
+        response.send(JSON.stringify( hiveFlightsheets ) )
+        //getFlightsheets()
     })
 
     app.get('/api', function(request, response) {
@@ -143,6 +148,8 @@ if(typeof config.hiveosAccessToken != 'undefined' && typeof config.hiveosLogin !
     hiveMinerStats = {}
     hiveFarms = {}
     hiveWorkers={}
+    hiveFlightsheets={}
+
     var mainFarmId = 0
     // returns json or a rejected promise
     var normalPromiseCb = function(r){
@@ -373,7 +380,7 @@ if(typeof config.hiveosAccessToken != 'undefined' && typeof config.hiveosLogin !
     function getFlightsheets(){
         // pass farmId to this one
         // get famrs first
-        getFarms().then(function(r,e){
+        return getFarms().then(function(r,e){
             var farms = []
             if(typeof e == 'undefined' || e == null || !e){
                 // check for data attr.
@@ -385,17 +392,71 @@ if(typeof config.hiveosAccessToken != 'undefined' && typeof config.hiveosLogin !
             }
             return farms
         }).then(function(farms){
+            var sheets= []
+
             farms.filter(function(f){
-                fetchUrl('farms/'+f+'/fs').then(function(r,e){
+                fetchUrl('farms/'+f+'/fs',true).then(function(r,e){
                     console.log('fetch farms flight sheet' + f + ' error?:' + e)
                     // TODO Either use something other than fetch / fetchURL (prolly request..)
                     // the returned response is a gzip !!! WHAT A PAIN IN THE ASS.
-                    console.log(r.body)
+                    //console.log(r.json())
+                    sheets.push(r)
+                    //console.log(r)
+                    return r.json()
 
+                    //return r
+                }).then(function(data){
+                    var r = {}
+                    data=data.data
+                    data.filter(function(d){
+                        // do more conditional filtering... especially on 'items'
+                        // storing farm id > id in keyvalues
+                        var itm= d.items
+                        var itmKeys=['coin','pool','miner','pool_urls','miner_config']
+                        var items = []
+
+                        itm.filter(function(item){
+                            var newItm={}
+                            for(var itmKey in item){
+                                if(itmKeys.indexOf(itmKey) > -1){
+                                    if(itmKey=='miner_config'){
+                                        var m_conf=item[itmKey]
+                                        item[itmKey]={
+                                            algo: m_conf.algo,
+                                            user_config: m_conf.user_config,
+                                            connection_var: [m_conf.user,m_conf.pass,m_conf.server,m_conf.port,m_conf.template]
+                                        }
+                                    }
+                                    newItm[itmKey]= item[itmKey]
+                                }
+                                items.push(newItm)
+                                
+                            }    
+                        })
+                        
+                        var filtered = { 
+                            name: d.name,
+                            is_favorite:false,
+                            groups: d.items
+                        }
+                        if(typeof r[d.id] == 'undefined'){
+                            r[d.id]={}
+                        }
+                        r[d.id]=filtered
+                    })
+                    if(typeof hiveFlightsheets[f] == 'undefined'){
+                        hiveFlightsheets[f]=[]
+                    }
+                    hiveFlightsheets[f]=r
+                    //sheets.push(data)
+                }).catch(function(err){
+                    console.log(err)
                 })
 
             })
+          
         })
+      
         //return fetchUrl('farms/'+farmId+'/fs').then(normalPromiseCb)
     }
 
@@ -420,6 +481,8 @@ if(typeof config.hiveosAccessToken != 'undefined' && typeof config.hiveosLogin !
         if(typeof accessToken != 'undefined' && accessToken != config.hiveosAccessToken){
             return fetch(`${baseUrl}/${url}`, {
                     method: 'GET',
+                    compress:true,
+                    gzip:true,
                     headers: {
                         'Authorization': `Bearer ${accessToken}`,
                     }
@@ -432,9 +495,16 @@ if(typeof config.hiveosAccessToken != 'undefined' && typeof config.hiveosLogin !
     }
 
     module.exports = {
-        //getFlightsheets: function(){
-        //    return getFlightsheets().catch(defaultError)
-        //},
+        getFlightsheets: function(){
+            return hiveFlightsheets
+            //return getFlightsheets().catch(defaultError)
+        },
+        forceFlightRefresh:function(){
+            return getFlightsheets().then(function(){
+                return hiveFlightsheets
+            }).catch(defaultError)
+
+        },
         getAllLocalData : function(){
             return{
                 farms: hiveFarms,
