@@ -25,7 +25,9 @@
         </div>
         <div class="hiveContainer" id="hiveFarmData">
         </div>
-
+        <button onClick="getHiveFlightsheets()">Get Flightsheets</button>
+        <div class="hiveContainer" id="hiveFlightsheets">
+        </div>
         <script>            
     
 
@@ -390,6 +392,64 @@
                         }
 
                     }
+                })
+            }
+            getHiveFlightsheets = function(){
+                var endPoint = '/flightsheets'
+                $.getJSON(endPoint,function(data){
+                    if(typeof data == 'object' && data)
+                    console.log(data)
+                    // assemble farm id/flightsheet id and name (if available)
+                    var rows=[]
+                    for(var farmId in data){
+                        // FARM
+                        var farm = data[farmId]
+                        for(var fsId in farm){
+                            // FLIGHTSHEET ID
+                            var fs = farm[fsId]
+                            var toShow = {
+                                farmId:farmId,
+                                id: fsId
+                            }
+                            if(typeof fs.name != 'undefined'){
+                                toShow['name']=fs.name
+                            }else{
+                                toShow['name']='Untitled'
+                            }
+                            if(typeof fs['groups'] != 'undefined'){
+                                // probably do stuff here for groups....
+                                toShow['groups']=fs['groups']
+
+                            }
+                            console.log(toShow)
+                            rows.push(toShow)
+                        }
+
+                    }
+                    if(rows.length>0){
+                        var result=[]
+                        rows.filter(function(r){
+                            // use farmId+id for GUID
+                            var guid = r.farmId+'-'+r.id
+                            var line = '<tr id="'+guid+'"><td>'+r.name+'</td><td>'
+                            // hightlight /move flightsheets in use to top
+                            // show 'favored' flightsheets after active
+                            // option to hide 'untitled' flightsheets
+                            r.groups.filter(function(g){
+                                var iLine = '<ul><li>'+g.coin+' - '+(g.miner_config.algo ? g.miner_config.algo :'')+'</li><li> '+( g.miner_config.user_config ?  g.miner_config.user_config :'ALL') +'</li><li><!--'+g.wal_id+'--></ul>'
+                                line += iLine
+                                // reform 'miner_conf:user_config' to only show devices
+                                // co link wallet info prolly.... TODO
+                            })
+                            line+='</td>'
+                            result.push(line)
+                            console.log(r)
+                        })
+                        writeToDom('hiveFlightsheets',result)
+                        // attach click events
+
+                    }
+
                 })
             }
             getHiveData()
