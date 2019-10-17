@@ -1,6 +1,11 @@
 .hiveContainer,.hiveContainer ul{
 	list-style-type: none;	
 }
+
+.hrByCoin li{
+	width:100%;
+	height:52px;
+}
 .wrk_idx,.wrk_temp,.wrk_fans{
 	width:35px;
 	text-align: center;
@@ -19,4 +24,14 @@ width:50%;
 }
  table{
 	width:100%;
+}
+
+.wrk_idx{
+	width:400px;
+	float:left;
+	text-align:right;
+}
+.coinImg{
+	float:left;
+	width:48;
 }

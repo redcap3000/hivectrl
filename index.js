@@ -134,6 +134,14 @@ if(typeof config.hiveosAccessToken != 'undefined' && typeof config.hiveosLogin !
         //console.log(hiveMiners)
         response.send(JSON.stringify(hiveMinerStats));
     })
+
+    app.get('/hivepost/:directive',function(request,response){
+        if(typeof request.params != 'undefined' && typeof request.params['directive'] != 'undefined'){
+            console.log(request.params)
+        }
+        response.send(JSON.stringfy(false))
+        return false
+    })
     
     /*
      *
