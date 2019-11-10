@@ -161,6 +161,7 @@
             getHiveData = function(){
                 var endPoint = '/api'
                 $.getJSON(endPoint,function(data){
+                    console.log(data)
                     if(typeof data != 'undefined'){
                         var minerStats= data.minerstats
                         /*
@@ -177,6 +178,7 @@
                              for(var workerId in minerStats){
                                 var miners = minerStats[workerId]
                                 miners.filter(function(w){
+                                    console.log(w)
                                     if(typeof minerStatsRef[workerId] == 'undefined'){
                                         minerStatsRef[workerId] ={}
                                     }
@@ -186,38 +188,36 @@
 
                                     }
                                     var concatDatas=[]
+
                                     function busFilter(b,i){
-                                             // card title
-                                            // force string for lookup
-                                            var b2 = b+''
-                                            var row = {
-                                           //     cardTitle : workers_ref[workerId][b2],
-                                                workerId : workerId,
-                                                bus_number : b,
-                                                fans : w.fans[i],
-                                                hashes: w.hashes[i],
-                                                temps : w.temps[i],
-                                                algo : w.algo,
-                                                coin : w.coin
-                                            }
-                                           if(typeof hisHash[workerId+''] == 'undefined'){
-                                                hisHash[workerId+'']={}
-                                           }
-                                           if(typeof hisHash[workerId+''][b+''] == 'undefined'){
-                                                hisHash[workerId+''][b+'']=[]
-                                           }
-                                           if(w.hashes[i] != hisHash[workerId+''][b+''][hisHash[workerId+''][b+''].length-1]){
-                                                hisHash[workerId+''][b+''].push(w.hashes[i])
-                                            }
-                                           // var workerCardTitle = workers_ref[workerId][b2]
-                                            if(typeof miners_stats[workerId] == 'undefined'){
-                                                miners_stats[workerId] = {}
-                                            }
-                                            if(typeof miners_stats[workerId][b2] == 'undefined'){
-                                                miners_stats[workerId][b2] ={}
-                                            }
-                                            miners_stats[workerId][b2]=row
+                                        var b2 = b+''
+                                        var row = {
+                                            workerId : workerId,
+                                            bus_number : b,
+                                            fans : w.fans[i],
+                                            hashes: w.hashes[i],
+                                            temps : w.temps[i],
+                                            algo : w.algo,
+                                            coin : w.coin
                                         }
+                                       if(typeof hisHash[workerId+''] == 'undefined'){
+                                            hisHash[workerId+'']={}
+                                       }
+                                       if(typeof hisHash[workerId+''][b+''] == 'undefined'){
+                                            hisHash[workerId+''][b+'']=[]
+                                       }
+                                       if(w.hashes[i] != hisHash[workerId+''][b+''][hisHash[workerId+''][b+''].length-1]){
+                                            hisHash[workerId+''][b+''].push(w.hashes[i])
+                                        }
+                                       // var workerCardTitle = workers_ref[workerId][b2]
+                                        if(typeof miners_stats[workerId] == 'undefined'){
+                                            miners_stats[workerId] = {}
+                                        }
+                                        if(typeof miners_stats[workerId][b2] == 'undefined'){
+                                            miners_stats[workerId][b2] ={}
+                                        }
+                                        miners_stats[workerId][b2]=row
+                                    }
 
                                     if(typeof w.bus_numbers != 'undefined'){
                                         w.bus_numbers.filter(busFilter)
@@ -249,7 +249,6 @@
                                                 if(w.hashes[c] != hisHash[workerId+''][c+''][hisHash[workerId+''][c+''].length-1]){
                                                     hisHash[workerId+''][c+''].push(w.hashes[c])
                                                 }
-                                                 // var workerCardTitle = workers_ref[workerId][b2]
                                                 if(typeof miners_stats[workerId] == 'undefined'){
                                                     miners_stats[workerId] = {}
                                                 }
@@ -257,13 +256,10 @@
                                                     miners_stats[workerId][c2] ={}
                                                 }
                                                 miners_stats[workerId][c2]=row
-                                                //busFilter(c,c).bind({w:w})
                                                 c++
 
                                             }
-                                            //w.hashes.filter(function(h,i){
-                                            //    return busFilter(i,i)
-                                            //})
+                                     
                                         }
                                         // some miners like xmr dont provide bus numbers for whatever reason so use a different field and count index
                                     }
@@ -350,6 +346,7 @@
                       
                                         var cardStats=undefined
                                         if(typeof miners_stats[workerId] != 'undefined' && typeof miners_stats[workerId][w.bus_number+''] != 'undefined'){
+                                            // WORKER HASH|RATE VISUALISATION THINGEE AROUND HERE
                                             cardStats = miners_stats[workerId][w.bus_number+'']
                                             var cHashRate=convertHashrate(cardStats.hashes,true)
                                             var cHashRateString = convertHashrate(cardStats.temps)

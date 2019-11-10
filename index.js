@@ -27,7 +27,7 @@ if(typeof config.hiveosAccessToken != 'undefined' && typeof config.hiveosLogin !
         hiveData = {}
         hiveFarms = {}
         getFlightsheets().then(function(){
-                console.log(hiveFlightsheets)
+              //  console.log(hiveFlightsheets)
         }).catch(defaultError)
 
         let getAllWorkersLoop = function(){
@@ -35,80 +35,7 @@ if(typeof config.hiveosAccessToken != 'undefined' && typeof config.hiveosLogin !
             return getFarmWorkersGpus()
 
             // i dont think i need this...
-            return getAllWorkers().then((r) => {
-
-                let farm = []
-                let filterWorkersInfo = function(worker){
-                    // the final step.
-                    let exclude = [ 'name','algo','gpu_info','stats']
-                    result = {}
-                    worker.filter(function(w){
-                        var theWorker = w
-                        // order a workers cards by the cardInfo field
-                        var byCard = []
-                        for(let k in theWorker){
-                            if(exclude.indexOf(k) > -1){
-                                var theRow = {}
-                                if(k == 'gpu_summary'){
-                                    result[k]=theWorker[k]['gpus']
-                                }else if(k == 'gpu_info'){
-                                    let t = theWorker[k]
-                                    let rows = []
-                                    t.filter(function(x){
-                                        let card = x
-                                        // convert power limits from 'W' to integers
-                                        for(let l in card.power_limit){
-                                            let limit = card.power_limit[l]
-                                            if(typeof limit != 'undefined' && limit && limit != null){
-                                                card.power_limit[l] = parseInt(limit.split('W')[0].trim())
-                                            }
-                                        }
-                                        // create a more 'general' thing to help select cards of the exact same
-                                        // type ... i.e. don't have to individually select 4 1060's to perform
-                                        // the same operation, apply to a 'grouping'
-                                        let gpuInfo = {
-                                            algo:card.algo,
-                                            index: card.index,
-                                            bus: card.bus_id+' ' + card.bus_num,
-                                            power_limit : card.power_limit,
-                                            cardInfo: card.model
-                                            //cardInfo: card.brand + ' - ' + card.model + ' - ' + card.details.mem
-                                        }
-                                        rows.push(gpuInfo)
-                                        if(typeof byCard[gpuInfo.cardInfo] == 'undefined'){
-                                            byCard[gpuInfo.cardInfo]=[]
-                                        }
-                                        byCard[gpuInfo.cardInfo].push(gpuInfo)
-                                        
-
-                                    })
-                                    theRow = rows
-                                }else{
-                                    // gpu summary probably.... 
-                                    theRow=theWorker[k]
-                                }
-                                result[w.name]=theRow
-                            }
-                        }
-                    })
-                    return result
-                }
-                // potentially write the filtered result to a datastore 
-                // but for now just write to console, handy es6 syntax FTW!
-                let displayWorkersInfo = console.log 
-                let storeVar = function(val){
-                    hiveData=val
-                }
-                r.filter( (f,i) => {
-                    f.then(filterWorkersInfo).
-                        then(storeVar).
-                            catch(console.log)
-                })      
-            }).catch( (e) => {
-                console.log("HiveOS getFarms() error")
-                console.log(e)
-                return false
-            })
+          
         }
         getAllWorkersLoop()
         var hiveMainInterval = setInterval(function(){getAllWorkersLoop()},7 * 1000)
@@ -142,15 +69,37 @@ if(typeof config.hiveosAccessToken != 'undefined' && typeof config.hiveosLogin !
         response.send(JSON.stringfy(false))
         return false
     })
-    
+
+
+    const baseUrl = 'https://api2.hiveos.farm/api/v2';
+    const fetch = require('node-fetch');
+      // for specific 
+    app.get('/herominers-swp/:walletaddress',function(request,response){
+        var baseUrl="https://swap.herominers.com/api/live_stats?address="
+        if(typeof request.params != 'undefined' && typeof request.params['walletaddress'] != 'undefined'){
+            console.log("SWP LOOKUP BEGIN")
+            console.log(baseUrl+request.params['walletaddress'])
+             return fetch(baseUrl+request.params['walletaddress'], 
+                    {
+                    //method: 'GET' 
+                    },function(err,response){
+                        console.log(err)
+                        console.log(response)
+                        if(typeof response.data != 'undefined'){
+                            response.end(JSON.stringify(response.data))
+                        }
+                    })
+             
+        }
+        return response.end(JSON.stringify(false))
+    })
+
     /*
      *
      * EXPRESS JS APP 
      * END
      *
      */
-    const baseUrl = 'https://api2.hiveos.farm/api/v2';
-    const fetch = require('node-fetch');
     var accessToken = config.hiveosAccessToken;
     hiveMiners = {}
     hiveMinerStats = {}
@@ -234,6 +183,7 @@ if(typeof config.hiveosAccessToken != 'undefined' && typeof config.hiveosLogin !
         return fetchUrl('farms').then(normalPromiseCb)
     }
     function getFarmWorkersGpus() {
+        console.log("GET FARMWORKERS GPUS")
         return getFarms().then(function(r,e){
             if(typeof r != 'undefined' && typeof r.data != 'undefined' && r.data.length > 0){
                 var farmWorkersGpus = []
@@ -248,7 +198,9 @@ if(typeof config.hiveosAccessToken != 'undefined' && typeof config.hiveosLogin !
                         stats:                  w.stats,
                         hardware_power_draw:    w.hardware_power_draw,
                         hashrates:              w.hashrates,
-                        hashrates_by_coin:      w.hashrates_by_coin
+                        hashrates_by_coin:      w.hashrates_by_coin,
+                        // slightly repetitve???
+                        gpu_stats :             w.gpu_stats
                     }
                     if(typeof hiveFarms[w.id] == 'undefined'){
                         hiveFarms[w.id]={}
@@ -262,16 +214,31 @@ if(typeof config.hiveosAccessToken != 'undefined' && typeof config.hiveosLogin !
                 })
             }
             if(typeof farmWorkersGpus != 'undefined' && farmWorkersGpus.length > 0){
+
                 return Promise.all(farmWorkersGpus)
                 .then(
                     function(vals){
                         var GPUS=[]
+                         var gpuStatsAgg = []
                         vals.filter(function(v){
                             v.data.filter(function(d){
+                               // console.log(d)
+                               // throw false
                                 var worker = {}
-                                var workerId = d.id
-                                var farmId = d.farmId
+                                workerId = d.id
+                                farmId = d.farm_id
                                 // pre process
+                                gpu_stats = {}
+                                // create linked list for power stat 
+                                if(typeof d['gpu_stats'] != 'undefined'){
+                                    d['gpu_stats'].filter(function(s){
+                                        console.log(s)
+                                        if(typeof gpu_stats.bus_number == 'undefined'){
+                                            gpu_stats[s.bus_id] = s.power
+                                        }
+                                    })
+                                }
+                                console.log(gpu_stats)
                                 for(var key in d){
                                     var keys = ['id','farm_id','name','units_count',
                                                 'active','ip_addresses','remote_address',
@@ -293,8 +260,10 @@ if(typeof config.hiveosAccessToken != 'undefined' && typeof config.hiveosLogin !
                                             worker[key]=d[key]
                                         }else if(key == 'gpu_info'){
                                             var gpu_info = d[key]
+                                           
                                             //  give ref keys to combine hashrates clientside
                                              gpu_info.filter(function(gpu){
+                                          
                                                 var newGpu = {
                                                     idx: gpu.index,
                                                     bus:gpu.bus,
@@ -302,7 +271,8 @@ if(typeof config.hiveosAccessToken != 'undefined' && typeof config.hiveosLogin !
                                                     model: gpu.model,
                                                     min: gpu.power_limit.min,
                                                     max: gpu.power_limit.max,
-                                                    def: gpu.power_limit.def
+                                                    def: gpu.power_limit.def,
+                                                    bus_id : gpu.bus_id
                                                 }
                                                 // for this would be accessing in a data tree
                                                 // with key values ... only show the power information available
@@ -311,7 +281,8 @@ if(typeof config.hiveosAccessToken != 'undefined' && typeof config.hiveosLogin !
                                                     min: gpu.power_limit.min,
                                                     max: gpu.power_limit.max,
                                                     def: gpu.power_limit.def,
-                                                    bus_number:gpu.bus_number
+                                                    bus_number:gpu.bus_number,
+                                                    bus_id : gpu.bus_id
                                                 }
                                                 if(typeof hiveMiners[gpu.worker] == 'undefined'){
                                                     hiveMiners[gpu.worker]=[]
@@ -319,6 +290,13 @@ if(typeof config.hiveosAccessToken != 'undefined' && typeof config.hiveosLogin !
                                                 var farmId = d.farm_id
                                                 var workerId = d.id
                                                
+                                                if(typeof gpu_stats[gpu.bus_id] != 'undefined'){
+                                                    minimumGpuData.power = gpu_stats[gpu.bus_id]
+                                                }else{
+                                                    console.log('gpu stat missing')
+                                                    console.log(gpu_stats)
+                                                }
+                                                console.log(minimumGpuData)
                                                 // cross ref existing worker in existing var
                                                 if(typeof hiveFarms[farmId] != 'undefined'){
                                                     //hiveFarms[workerId][]
@@ -344,20 +322,7 @@ if(typeof config.hiveosAccessToken != 'undefined' && typeof config.hiveosLogin !
                                                 GPUS.push(newGpu)
                                             })
                                         }
-                                        else if(key == 'gpu_stats'){
-                                            var gpuStats=d[key]
-                                            var gpuRows=[]
-                                            worker[key]=[]
-                                            gpuStats.filter(function(g){
-                                                worker[key].push({
-                                                    temp: g.temp,
-                                                    fan: g.fan,
-                                                    power: g.power,
-                                                    is_overheated: g.is_overheated,
-                                                    bus_info: g.bus_id + '#'+g.bus_number
-                                                })
-                                            })
-                                        }else{
+                                        else{
                                             worker[key]=d[key]
                                         }
                                     }
@@ -376,7 +341,42 @@ if(typeof config.hiveosAccessToken != 'undefined' && typeof config.hiveosLogin !
                                 })
                             }
                         })
-                        return GPUS
+                        var final = []
+                        // ALL OF THIS JUST TO GET ONE THING THATS MISSING?
+                        // HIVEOS API U NEED TO FIX YOURSELF. This is why people are
+                        // running away from your solution because your web UI is barely functional
+                        // which would explain the API , heaps and heaps of unneeded abstractions.
+                       
+                        GPUS.filter(function(g){
+                            var newG = g
+                            var busN = g.bus_number+''
+                            if(typeof gpuStatsAgg[busN] != 'undefined'){
+                                var thePower = gpuStatsAgg[busN].power
+                            }
+                            // get current model and match
+                            var theGpus =  hiveFarms[farmId]['workers'][workerId]['gpus'][g.model]
+             
+                            var gpuMatch = false
+                            if(typeof gpu_stats != 'undefined' && typeof theGpus != 'undefined'){
+                                console.log(g.bus_id)
+                                console.log(gpu_stats[g.bus_id])
+                                theGpus.filter(function(iGpu,iGpuIdx){
+                                    if(iGpu.bus_id === g.bus_id){
+                                        gpuMatch = Number(iGpuIdx)
+                                    }
+                                })
+                                if(gpuMatch){
+                                    hiveFarms[farmId]['workers'][workerId]['gpus'][g.model][gpuMatch].power = thePower
+                                }
+//                                hiveFarms[farmId]['workers'][workerId]['gpus']
+                            
+                              
+                            }
+                            // not working since i dont have reference to workerId at this point?!
+                            final.push(newG)
+                        })
+                        // apply gpu stats here??
+                        return final
                     }).catch(defaultError)
                 }else{
                     // no farms to lookup
