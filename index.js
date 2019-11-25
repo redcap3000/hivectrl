@@ -1,4 +1,3 @@
-const config = require('./config.json');
 process.on('SIGTERM', () => {
     console.info('SIGTERM signal received.');
 });
@@ -7,6 +6,30 @@ process.on('SIGINT', () => {
     //onShutdown()
     process.exit()
 });
+
+
+//check for env vars first
+fromEnv=false
+if(typeof process.env.hiveosAccessToken != 'undefined'){
+	fromEnv = true
+	config = {}
+	config.hiveosAccessToken = process.env.hiveosAccessToken
+	if(typeof process.env.hiveosLogin != 'undefined'){
+		config.hiveosLogin = process.env.hiveosLogin
+		if(typeof process.env.hiveosPass != 'undefined'){
+			config.hiveosPass = process.env.hiveosPass	
+		}else{
+			fromEnv = false
+		}
+	}else{
+		fromEnv = false
+	}
+}
+if(!fromEnv){
+//fall back to local
+	config = require('./config.json')
+}
+
 if(typeof config.hiveosAccessToken != 'undefined' && typeof config.hiveosLogin != 'undefined' && typeof config.hiveosPass != 'undefined'){
     /*
      *
