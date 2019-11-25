@@ -12,14 +12,15 @@
     <body>
         <div class="dev" id="colorRefScale"></div>
 
-      
-        <div  class="hiveContainer" id="hiveHashrateData">
-        </div>
-        <div class="hiveContainer" id="hiveWorkersData">
-        </div>
-        <div  style="display:none;"   class="hiveContainer" id="hiveFarmData">
+        <div   class="hiveContainer" id="hiveFarmData">
         </div>
 
+        <div class="hiveContainer" id="hiveWorkersData">
+        </div>
+      
+        <div  style="display:none;" class="hiveContainer" id="hiveHashrateData">
+        </div>
+   
         <div style="display:none;"  class="hiveContainer" id="hiveFlightsheets">
         </div>
 
@@ -277,20 +278,20 @@
                             var output=['<ul>']
                             var f = data.farms[farm]
                             var fieldsNames=[
-                                'Idle Power Draw',
+                               // 'Idle Power Draw',
                                 'Farm Name',
-                                'Price Per Watt',
+                                //'Price Per Watt',
                                 'Rig Count',
-                                'Workers Online',
-                                'Timezone',
+                                'Online',
+                                //'Timezone',
                             ]
                             var values = [
-                            f.hardware_power_draw,
+                            //f.hardware_power_draw,
                             f.name,
-                            f.power_price,
+                            //f.power_price,
                             f.rigs_count,
                             f.stats.workers_online,
-                            f.timezone
+                            //f.timezone
                             //f.hashrates_by_coin.coin,
                             //f.hashrates_by_coin.algo,
                             //f.hashrates_by_coin.hashrate
@@ -329,7 +330,7 @@
                             var workerClickGuids = []
                             for(var workerId in f.workers){
                                 var theWorker = f.workers[workerId]
-                                workers_digest.push('<li><b>Worker : '+workerId+'</b></li>')
+                                workers_digest.push('<li><hr/></li>')
                                 for(var gpuModel in theWorker.gpus){
                                     var wrk = theWorker.gpus[gpuModel]
                                     // need to cross reference workerId here..
@@ -341,7 +342,7 @@
 
                                     })
 
-                                    workers_digest.push('<li id="'+domGuid+'">' + gpuModel + ' ')
+                                   // workers_digest.push('<li id="'+domGuid+'">' + gpuModel + ' ')
                                     //attach click handler
                                     workerClickGuids.push(domGuid)
                                     // prefilter to generate the colorcoding grading based on the nearby cards?
@@ -375,6 +376,8 @@
                                                 }
                                             }else{
                                                 var hashrateStyle = 'background-color:none;'
+                                                //noData.push()
+                                               // return false
                                             }
                                             if(typeof cTemp != 'undefined'){
                                                 var cTempStyle='background-color:'+d3ColorCodeTemp(cTemp)+';'
@@ -423,10 +426,9 @@
                                                 //console.log(historicalHashrates)
                                             }
                                             workers_digest.push(
-                                                '<table><tr><th class="wrk_idx">'+returnCoinImgPath(cardStats.coin)+
-                                                w.idx + ' ' + cardStats.algo+
-                                                '</th><td  class="wrk_temp" style="'+cTempStyle+'">'+(typeof cTemp != 'undefined' ? cTemp : '')+'</td><td class="wrk_fans" style="'+
-                                                fanStyle+'">&nbsp;</td><td class="wrk_algo_info" style="'+hashrateStyle+'">&nbsp;'+
+                                                '<table><tr><td class="wrk_algo">'+returnCoinImgPath(cardStats.coin)+
+                                                '</td><td class="wrk_temp" style="'+cTempStyle+'">'+(typeof cTemp != 'undefined' ? cTemp : '')+'</td><td class="wrk_fans" style="'+
+                                                fanStyle+'">&nbsp;</td><td style="'+hashrateStyle+'">&nbsp;'+
                                                     cHashRateString+
                                                 '</td></tr>'+
 
@@ -435,7 +437,7 @@
 
                                         }else{
                                             //console.log(miners_stats[workerId][w.idx])
-                                            workers_digest.push('<span>'+w.idx+'</span>')
+                                            //workers_digest.push('<span>'+w.idx+'</span>')
                                         }
                                         // fans hashes temps
                                         // for combining with data below
@@ -468,6 +470,7 @@
                                 docElement.innerHTML += o
                             })
                             writeToDom('hiveWorkersData',workers_digest)
+                            /*
                             if(workerClickGuids.length > 0){
                                 workerClickGuids.filter(function(wrkr){
                                     document.getElementById(wrkr).addEventListener("click",function(){
@@ -481,6 +484,7 @@
                                     
                                 })
                             }
+                            */
                             // add click handlers   
                         }
 
@@ -542,34 +546,7 @@
             }
             getHiveData()
             // listen to changes initated by click handler
-            setInterval(
-                function(){
-                    if(selectedCardIdxs.length > 0){
-                        var sCardString = ['<ul>']
-                        selectedCardIdxs.filter(function(c){
-                            sCardString.push('<li>'+c+'</li>')
-                        })
-                        sCardString.push('</ul>')
-                        sCardString.push('<table><tr><th>miner</th><th>Device String</th></tr>')
-                        
-                        var miners = ['gminer','trex','cryptodredge']
-                        miners.filter(function(miner){
-                            var getP=getDeviceIndexPrefix(miner,selectedCardIdxs)
-                            sCardString.push('<tr><td>'+miner+'</td><td>'  +getP+'</td></tr>')
-                        })
-                        sCardString.push('</table>')
-                        writeToDom('hiveSelectedIdxs',sCardString.join(''))
-                    }
-                    if(selectedWorkerId  !== 0){
-                        //document.getElementById('hiveSelectedWorkerId').innerHTML = selectedWorkerId
-                        writeToDom('hiveSelectedWorkerId',selectedWorkerId)
-                    }
-                    if(selectedCard  != ''){
-                        //document.getElementById('hiveSelectedCard').innerHTML = selectedCard
-                        writeToDom('hiveSelectedCard',selectedCard)
-                    }
-                },1000
-            )
+           
             if(getData === true){
                 dataInt = setInterval(function(){
                     getHiveData()

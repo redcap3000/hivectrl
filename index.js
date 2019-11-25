@@ -261,7 +261,6 @@ if(typeof config.hiveosAccessToken != 'undefined' && typeof config.hiveosLogin !
                                         }
                                     })
                                 }
-                                console.log(gpu_stats)
                                 for(var key in d){
                                     var keys = ['id','farm_id','name','units_count',
                                                 'active','ip_addresses','remote_address',
