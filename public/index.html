@@ -12,22 +12,25 @@
     <body>
         <div class="dev" id="colorRefScale"></div>
 
-        <div class="hiveContainer" id="hiveSelectedWorkerId">
-        </div>
-        <div class="hiveContainer" id="hiveSelectedCard">
-        </div>
-        <div class="hiveContainer" id="hiveSelectedIdxs">
-        </div>
-
-        <div class="hiveContainer" id="hiveHashrateData">
+      
+        <div  class="hiveContainer" id="hiveHashrateData">
         </div>
         <div class="hiveContainer" id="hiveWorkersData">
         </div>
-        <div class="hiveContainer" id="hiveFarmData">
+        <div  style="display:none;"   class="hiveContainer" id="hiveFarmData">
         </div>
-        <button onClick="getHiveFlightsheets()">Get Flightsheets</button>
-        <div class="hiveContainer" id="hiveFlightsheets">
+
+        <div style="display:none;"  class="hiveContainer" id="hiveFlightsheets">
         </div>
+
+
+          <div style="display:none;"  class="hiveContainer" id="hiveSelectedWorkerId">
+        </div>
+        <div style="display:none;"  class="hiveContainer" id="hiveSelectedCard">
+        </div>
+        <div style="display:none;"  class="hiveContainer" id="hiveSelectedIdxs">
+        </div>
+
         <script>  
 
             function getDeviceIndexPrefix(miner,devices){
