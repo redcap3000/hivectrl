@@ -86,9 +86,9 @@ if(typeof config.hiveosAccessToken != 'undefined' && typeof config.hiveosLogin !
     })
 
     app.get('/hivepost/:directive',function(request,response){
-        if(typeof request.params != 'undefined' && typeof request.params['directive'] != 'undefined'){
-            console.log(request.params)
-        }
+        //if(typeof request.params != 'undefined' && typeof request.params['directive'] != 'undefined'){
+        //    console.log(request.params)
+        //}
         response.send(JSON.stringfy(false))
         return false
     })
@@ -100,14 +100,14 @@ if(typeof config.hiveosAccessToken != 'undefined' && typeof config.hiveosLogin !
     app.get('/herominers-swp/:walletaddress',function(request,response){
         var baseUrl="https://swap.herominers.com/api/live_stats?address="
         if(typeof request.params != 'undefined' && typeof request.params['walletaddress'] != 'undefined'){
-            console.log("SWP LOOKUP BEGIN")
-            console.log(baseUrl+request.params['walletaddress'])
+            //console.log("SWP LOOKUP BEGIN")
+            //console.log(baseUrl+request.params['walletaddress'])
              return fetch(baseUrl+request.params['walletaddress'], 
                     {
                     //method: 'GET' 
                     },function(err,response){
-                        console.log(err)
-                        console.log(response)
+                        //console.log(err)
+                        //console.log(response)
                         if(typeof response.data != 'undefined'){
                             response.end(JSON.stringify(response.data))
                         }
@@ -206,7 +206,7 @@ if(typeof config.hiveosAccessToken != 'undefined' && typeof config.hiveosLogin !
         return fetchUrl('farms').then(normalPromiseCb)
     }
     function getFarmWorkersGpus() {
-        console.log("GET FARMWORKERS GPUS")
+        //console.log("GET FARMWORKERS GPUS")
         return getFarms().then(function(r,e){
             if(typeof r != 'undefined' && typeof r.data != 'undefined' && r.data.length > 0){
                 var farmWorkersGpus = []
@@ -230,7 +230,7 @@ if(typeof config.hiveosAccessToken != 'undefined' && typeof config.hiveosLogin !
                     }
                     hiveFarms[w.id]=farmInfo
                     if(hiveFarms[w.id] !== farmInfo){
-                        console.log("FARM " + w.id + " UPDATED")
+                        //console.log("FARM " + w.id + " UPDATED")
                         // HMM.... might be faster to just replace it rather than check.
                     }
                     farmWorkersGpus.push(fetchUrl(`farms/${w.id}/workers`).then(normalPromiseCb))        
@@ -255,13 +255,13 @@ if(typeof config.hiveosAccessToken != 'undefined' && typeof config.hiveosLogin !
                                 // create linked list for power stat 
                                 if(typeof d['gpu_stats'] != 'undefined'){
                                     d['gpu_stats'].filter(function(s){
-                                        console.log(s)
+                                        //console.log(s)
                                         if(typeof gpu_stats.bus_number == 'undefined'){
                                             gpu_stats[s.bus_id] = s.power
                                         }
                                     })
                                 }
-                                console.log(gpu_stats)
+                                //console.log(gpu_stats)
                                 for(var key in d){
                                     var keys = ['id','farm_id','name','units_count',
                                                 'active','ip_addresses','remote_address',
@@ -316,10 +316,10 @@ if(typeof config.hiveosAccessToken != 'undefined' && typeof config.hiveosLogin !
                                                 if(typeof gpu_stats[gpu.bus_id] != 'undefined'){
                                                     minimumGpuData.power = gpu_stats[gpu.bus_id]
                                                 }else{
-                                                    console.log('gpu stat missing')
-                                                    console.log(gpu_stats)
+                                                    //console.log('gpu stat missing')
+                                                    //console.log(gpu_stats)
                                                 }
-                                                console.log(minimumGpuData)
+                                                //console.log(minimumGpuData)
                                                 // cross ref existing worker in existing var
                                                 if(typeof hiveFarms[farmId] != 'undefined'){
                                                     //hiveFarms[workerId][]
@@ -337,10 +337,10 @@ if(typeof config.hiveosAccessToken != 'undefined' && typeof config.hiveosLogin !
                                                     }
                                                     hiveFarms[farmId]['workers'][workerId]['gpus'][gpu.model].push(minimumGpuData)
                                                 }else{
-                                                    console.log("COULD NOT FIND")
+                                                    //console.log("COULD NOT FIND")
                                                     // probaby return a promise rejection?
                                                     // or force refresh something then try same method again.
-                                                    console.log(farmId)
+                                                    //console.log(farmId)
                                                 }
                                                 GPUS.push(newGpu)
                                             })
@@ -381,8 +381,8 @@ if(typeof config.hiveosAccessToken != 'undefined' && typeof config.hiveosLogin !
              
                             var gpuMatch = false
                             if(typeof gpu_stats != 'undefined' && typeof theGpus != 'undefined'){
-                                console.log(g.bus_id)
-                                console.log(gpu_stats[g.bus_id])
+                                //console.log(g.bus_id)
+                                //console.log(gpu_stats[g.bus_id])
                                 theGpus.filter(function(iGpu,iGpuIdx){
                                     if(iGpu.bus_id === g.bus_id){
                                         gpuMatch = Number(iGpuIdx)
@@ -403,7 +403,7 @@ if(typeof config.hiveosAccessToken != 'undefined' && typeof config.hiveosLogin !
                     }).catch(defaultError)
                 }else{
                     // no farms to lookup
-                    console.log('farmWorkersGpus - undefined')
+                    //console.log('farmWorkersGpus - undefined')
                 }
         })
     }
@@ -427,7 +427,7 @@ if(typeof config.hiveosAccessToken != 'undefined' && typeof config.hiveosLogin !
 
             farms.filter(function(f){
                 fetchUrl('farms/'+f+'/fs',true).then(function(r,e){
-                    console.log('fetch farms flight sheet' + f + ' error?:' + e)
+                    //console.log('fetch farms flight sheet' + f + ' error?:' + e)
                     // TODO Either use something other than fetch / fetchURL (prolly request..)
                     // the returned response is a gzip !!! WHAT A PAIN IN THE ASS.
                     //console.log(r.json())
@@ -504,7 +504,7 @@ if(typeof config.hiveosAccessToken != 'undefined' && typeof config.hiveosLogin !
             return fetchUrl(`farms/${mainFarmId}/workers`).then(normalPromiseCb).catch(defaultError);
         }else{
             // getting farms internally?
-            console.log("Populating mainFarmId from 'getWorkers'")
+            //console.log("Populating mainFarmId from 'getWorkers'")
             return this.getFarms().then.getWorkers()
         }
     }
