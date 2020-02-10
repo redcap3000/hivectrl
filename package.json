@@ -4,8 +4,9 @@
   "description": "A web app for interfacing with with authenticated hive os api. Built around promises, served by express.",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "node index.js"
+    "start": "node index.js",
+    "test": "mocha",
+    "prepublish" : "mocha --exit"
   },
   "keywords": [
     "hiveos",
@@ -20,5 +21,9 @@
     "fetch": "^1.1.0",
     "node-fetch": "^2.6.0",
     "promises": "^0.2.5"
+  },
+  "devDependencies": {
+    "chai": "^4.2.0",
+    "mocha": "^7.0.1"
   }
 }
