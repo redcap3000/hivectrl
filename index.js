@@ -30,7 +30,26 @@ if(!fromEnv){
 	config = require('./config.json')
 }
 
+
+// to do /config validator
+// steps - on boot - check for change to card order
+// on storage store a reference that holds the name of the card + config settings
+// match config settings to card type 
+// implement 'save order' and 'restore order'
+// will apply settings via the card name (try to generate GUID)
+// generate GUID of cards
+// save map of GUID + card settings (voltage,core,memory,fan)
+// generate GUID based on 'order'
+
+// if above changes run the changer or as requested
+
+// always boot os into mantience mode to perform above check
+// idea is to save down time when changing card order so that troubleshooting
+// is faster (to avoid having to reconfigure cards one by one while hoping whatever miner
+// doesnt crash)
 if(typeof config.hiveosAccessToken != 'undefined' && typeof config.hiveosLogin != 'undefined' && typeof config.hiveosPass != 'undefined'){
+    var tradeOgre = require('./tradeogre.js');
+    var openWeather = require('./openweather.js')
     /*
      *
      * EXPRESS JS APP 
@@ -60,8 +79,17 @@ if(typeof config.hiveosAccessToken != 'undefined' && typeof config.hiveosLogin !
             // i dont think i need this...
           
         }
+   
         getAllWorkersLoop()
         var hiveMainInterval = setInterval(function(){getAllWorkersLoop()},7 * 1000)
+        // trade ogre interval 30 seconds?
+        if(typeof tradeOgre != 'undefined' && tradeOgre){
+            tradeOgre.main_loop()
+        }
+        if(typeof openWeather != 'undefined' && openWeather){
+            openWeather.main_loop()
+        }
+
     })
 
     app.get('/flightsheets',function(request,response){
@@ -84,6 +112,24 @@ if(typeof config.hiveosAccessToken != 'undefined' && typeof config.hiveosLogin !
         //console.log(hiveMiners)
         response.send(JSON.stringify(hiveMinerStats));
     })
+    if(typeof tradeOgre != 'undefined' && tradeOgre){
+        app.get('/tradeOgre', function(request, response) {
+            response.setHeader('Content-Type', 'application/json');
+            //console.log(hiveMiners)
+            let r = {
+                wallets : tradeOgre.wallets(),
+                orders : tradeOgre.orders()
+            }
+            response.send(JSON.stringify(r));
+        })
+    }
+
+    if(typeof openWeather != 'undefined' && openWeather){
+        app.get('/openWeather', function(request, response) {
+            response.setHeader('Content-Type', 'application/json');
+            response.send(JSON.stringify(openWeather.showCurrentWeather()));
+        })     
+    }
 
     app.get('/hivepost/:directive',function(request,response){
         //if(typeof request.params != 'undefined' && typeof request.params['directive'] != 'undefined'){
