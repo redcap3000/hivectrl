@@ -81,6 +81,10 @@
                 }
                 return colorCode
             }
+            function d3ColorCodeSimple(aFloat){
+                return d3.interpolateGreens(aFloat/10)
+                
+            }
             // for values like fan speeds, higher is red, lower is blue mids are green/yellow
             function d3ColorCodeInverse(percent){
                 percent = parseFloat(percent)
@@ -96,6 +100,15 @@
             function d3ColorCodeS(percent){
                 percent = parseFloat(percent)
                 return d3.interpolateGreens(percent/100)
+            }
+             function d3ColorCodeP(percent){
+                percent = parseFloat(percent)
+                return d3.interpolateGreens(percent/100000)
+            }
+            // for clouds
+             function d3ColorCodeC(percent){
+                percent = parseFloat(percent)
+                return d3.interpolateGreys(percent/100)
             }
             var rigs = {}
             var getData = true
@@ -335,7 +348,6 @@
                                 for(var gpuModel in theWorker.gpus){
 
                                     var wrk = theWorker.gpus[gpuModel]
-                                    console.log(wrk)
                                     // need to cross reference workerId here..
                                     var domGuid = 'w-'+workerId
                                     // generate guid from gpu indexes
@@ -490,6 +502,7 @@
                 $.getJSON(endPoint,function(data){
                     if(typeof data == 'object' && data){
                         var current = (typeof data.current != 'undefined'?data.current : false)
+                        var currentHourly = (typeof data.hourly != 'undefined' ? data.hourly : false)
                         if(current){
                             var currentString = ['<ul>']
                             for(var k in current){
@@ -512,9 +525,68 @@
                                 }
                             }                            
                             currentString.push('</ul>')
-                            writeToDom('openWeatherData',currentString)
 
                         }
+                          var rString = '<table><thead><tr><th>Time</th><th>Temp</th><th>Feels Like</th><th>humidty</th><th>dew_point</th><th>Clouds</th><th>Wind_speed</th><th>Wind Direction</th></tr></thead>'
+                        if(typeof currentHourly != 'undefined'){
+                            var currentHourlyString  = ''
+                          
+                            currentHourly.filter(function(o,x){
+                                // dt,temp,feels_like,pressure,humidity,temp,weather,wind_deg,wind_speed
+                                var obj = {}
+                                let temps = ['temp','feels_like','temp','dew_point']
+                                for(var k in o){
+                                    let s = '<li>'
+                                    if(k == 'dt'){
+                                        s += unixTS_to_date(o[k])
+                                        obj.date = unixTS_to_date(o[k])
+                                    }else if(temps.indexOf(k) > -1){
+                                        // temps
+                                        s += k+ ' : '+kelvinToFahrenheit(o[k])
+                                        obj[k] = ''
+                                        obj[k] = kelvinToFahrenheit(o[k])
+                                        
+                                    }else if(k == 'weather'){
+                                        // todo word images for current conditions
+                                    }else{
+                                        obj[k] = o[k]
+                                        s += k + ' ' + o[k]
+                                    }
+                                    s+='</li>'
+                                    currentHourlyString += s
+                                }
+                                if(typeof obj.wind_speed != 'undefined'){
+                                    let n = '<tr>'
+                                    for(var k2 in obj){
+                                        if(k2 == 'temp' || k2 == 'feels_like' || k2 == 'dew_point'){
+                                            n += "<td style='background-color:"+d3ColorCodeTemp(obj[k2])+";'>"
+                                        }else if(k2 == 'wind_speed'){
+                                            n += "<td style='background-color:"+d3ColorCodeSimple(obj[k2])+";'>"
+
+                                        }else if(k2 == 'clouds'){
+                                             n += "<td style='background-color:"+d3ColorCodeC(obj[k2])+";'>"
+                                        }else if(k2 == 'humidity'){
+                                              n += "<td style='background-color:"+d3ColorCodeTemp(obj[k2])+";'>"
+                                        }else if(k2 == 'pressure'){
+                                              //n += "<td style='background-color:"+d3ColorCodeP(obj[k2])+";'>"
+                                        }else if(k2 == 'wind_deg'){
+                                            n += "<td>"+obj[k2]+"</td>"
+                                        }
+                                    }
+                                    n+='</tr>'
+                                    rString+=n
+
+                                }
+                            })
+                            currentString.push(currentHourlyString)
+                        }else{
+                            alert('damn')
+                        }
+
+
+                        writeToDom('openWeatherData',rString)
+
+                        console.log(data)
                         //
                     }
                 })

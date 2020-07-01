@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Cryptocreeper</title>
+        <script type="text/javascript" src="https://static.cryptowat.ch/assets/scripts/embed.bundle.js"></script>
+
+
+        <style>
+        	.cryptowatchContainer{
+        		pointer-events:none;
+        		float:left;
+        	}
+        	#ccButtons{
+        		position:fixed;
+        		top:48px;
+        		left:0;
+        	}
+        	#ccButtons button,#ccButtons select{
+        		background-color:black;
+        		color:white;
+        		font-size:24px;
+
+        	}
+        	body{
+        		background-color:black;
+        		overflow-y:hidden;
+        	}
+        </style>
+        <script type="text/javascript" src="cryptowatch.js"></script>
+    </head>
+    <body>
+    	<div id ='ccButtons'></div>
+	<script type="text/javascript">
+    	/* build interface elements */
+    	var buildChartContainers = function(chartCount){
+    		for(var i =1; i<=chartCount; i++){
+    			var div = document.createElement('div')
+    			div.className = 'cryptowatchContainer'
+    			var formDiv = document.createElement('div')
+    			formDiv.className = 'formContainer'
+    			formDiv.id = 'cc_'+i
+    			var chartDiv = document.createElement('div')
+    			chartDiv.className = 'cc'
+    			chartDiv.id = 'ccc_'+i
+    			div.appendChild(formDiv)
+    			div.appendChild(chartDiv)
+    			document.body.appendChild(div)
+    		}
+
+    	}
+    	generatePresetsMenu()
+
+    	buildChartContainers(8)
+    </script>
+   
+    </body>
+</html>
