@@ -1,7 +1,40 @@
+table{
+	  border-collapse: collapse;
+	  width:50%;
+	  float:left;
+}
+
+#openWeatherData,#openWeatherData2 > table{
+width:50%;
+float:left;
+margin:0;
+padding:0;
+}
+#openWeatherData2 > table{
+	clear:right;
+	padding-bottom:10px;
+}
+#openWeatherData,#openWeatherData2 > small{
+	float:left;
+}
+.hiveContainer{
+	clear:right;
+	float:left;
+}
 .hiveContainer,.hiveContainer ul{
 	list-style-type: none;	
 }
 
+#hiveWorkersData{
+	float:right;
+	width:46%;
+	margin:2%;
+	margin-top:0;
+}
+#hiveFarmData{
+	float:right;
+
+}
 .hrByCoin li{
 	width:100%;
 	height:52px;
@@ -33,5 +66,16 @@ width:50%;
 }
 .coinImg{
 	float:left;
-	width:48;
+	width:10 !IMPORTANT;
+}
+td.iTable {
+	float:left;
+	width:144 !IMPORTANT;
+}
+
+#help{
+	float:left;
+	clear:both;
+	width:90%;
+	margin:10%;
 }

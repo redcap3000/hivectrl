@@ -11,6 +11,11 @@
     </head>
     <body>
         <div id="openWeatherData"></div>
+         <div id="openWeatherData2"></div>
+            <div class="hiveContainer" id="hiveWorkersData">
+        </div>
+        <div class="hiveContainer" id="hiveFarmData">
+        </div>
         <div class="dev" id="colorRefScale"></div>
         <div class="hiveContainer" id="hiveSelectedWorkerId">
         </div>
@@ -20,10 +25,7 @@
         </div>
         <div class="hiveContainer" id="hiveHashrateData">
         </div>
-        <div class="hiveContainer" id="hiveWorkersData">
-        </div>
-        <div class="hiveContainer" id="hiveFarmData">
-        </div>
+     
         <button onClick="getHiveFlightsheets()">Get Flightsheets</button>
         <div class="hiveContainer" id="hiveFlightsheets">
         </div>
@@ -85,6 +87,10 @@
                 return d3.interpolateGreens(aFloat/10)
                 
             }
+            function d3ColorCodeHour(aFloat){
+                return d3.interpolatePiYG(aFloat/24)
+                
+            }
             // for values like fan speeds, higher is red, lower is blue mids are green/yellow
             function d3ColorCodeInverse(percent){
                 percent = parseFloat(percent)
@@ -98,8 +104,12 @@
             }
             // for basic white-greens for stuff like hashrates
             function d3ColorCodeS(percent){
+                console.log(percent)
                 percent = parseFloat(percent)
-                return d3.interpolateGreens(percent/100)
+                if(percent > 1){
+                    console.log(percent/100)
+                }
+                return d3.interpolateGreens( ( percent/100 ) )
             }
              function d3ColorCodeP(percent){
                 percent = parseFloat(percent)
@@ -109,6 +119,10 @@
              function d3ColorCodeC(percent){
                 percent = parseFloat(percent)
                 return d3.interpolateGreys(percent/100)
+            }
+            function d3ColorCodeDirection(degrees){
+                return d3.interpolateViridis(degrees/360  )
+                
             }
             var rigs = {}
             var getData = true
@@ -147,13 +161,10 @@
                 }
                 if(hrate_check < 1.0){
                     hr =(hrate_check*1000).toFixed(2) + (typeof showRate != 'undefined'? ' h/s':'') 
-                    
                 }else if(hrate_check > 1000){
                     hr =(hrate_check/1000).toFixed(3) + (typeof showRate != 'undefined'? ' kh/s':'')
-                    
                 }else if(hrate_check > 10000){
                     hr =(hrate_check/10000).toFixed(4) + (typeof showRate != 'undefined'? ' mh/s':'') 
-                    
                 }
                 if(typeof hr != 'undefined'){
                     return hr
@@ -162,7 +173,6 @@
                 }
             }
             hisHash={}
-
             unixTS_to_date= function(unix_timestamp){
                 var date = new Date(unix_timestamp * 1000);
                 // Hours part from the timestamp
@@ -171,7 +181,6 @@
                 var minutes = "0" + date.getMinutes();
                 // Seconds part from the timestamp
                 var seconds = "0" + date.getSeconds();
-
                 // Will display time in 10:30:23 format
                 var formattedTime = hours + ':' + minutes.substr(-2) + ':' + seconds.substr(-2);
                 return formattedTime
@@ -227,7 +236,6 @@
                                        if(w.hashes[i] != hisHash[workerId+''][b+''][hisHash[workerId+''][b+''].length-1]){
                                             hisHash[workerId+''][b+''].push(w.hashes[i])
                                         }
-                                       // var workerCardTitle = workers_ref[workerId][b2]
                                         if(typeof miners_stats[workerId] == 'undefined'){
                                             miners_stats[workerId] = {}
                                         }
@@ -236,11 +244,9 @@
                                         }
                                         miners_stats[workerId][b2]=row
                                     }
-
                                     if(typeof w.bus_numbers != 'undefined'){
                                         w.bus_numbers.filter(busFilter)
                                     }else if(typeof w.bus_number != 'undefined'){
-                                        //[0].filter(busFilter)
                                         busFilter(parseInt(w.bus_number),0)
                                         // bus numbers not provided
                                     }else{
@@ -275,20 +281,12 @@
                                                 }
                                                 miners_stats[workerId][c2]=row
                                                 c++
-
                                             }
-                                     
                                         }
                                         // some miners like xmr dont provide bus numbers for whatever reason so use a different field and count index
                                     }
-                                    // bus_numbers
-                                    // fans
-                                    // hashes
-                                    // temps
-
                                 })
                             }
-
                             var output=['<ul>']
                             var f = data.farms[farm]
                             var fieldsNames=[
@@ -321,13 +319,12 @@
                                     var hrate_check = parseFloat(hr.hashrate)
                                     if(hrate_check < 1.0){
                                         hr.hashrate =(hrate_check*1000).toFixed(2) + ' h/s' 
-                                        
                                     }else if(hrate_check > 1000){
                                         hr.hashrate =(hrate_check/1000).toFixed(3) + ' kh/s' 
-                                        
                                     }else if(hrate_check > 10000){
                                         hr.hashrate =(hrate_check/10000).toFixed(4) + ' mh/s' 
-                                        
+                                    }else if(!hrate_check){
+                                        return false
                                     }
                                     hashrates_by_coin.push("<li>"+ returnCoinImgPath(hr.coin) + ' / ' + hr.algo + ' : ' + hr.hashrate + "</li>")
                                     if(typeof hashratesByCoinRef[hr.algo] == 'undefined'){
@@ -339,14 +336,13 @@
                                 })
                                 hashrates_by_coin.push('</ul>')
                             }
-                            var workers_digest=['<ul>']
+                            var workers_digest=[]
                             var workers_ref={}
                             var workerClickGuids = []
                             for(var workerId in f.workers){
                                 var theWorker = f.workers[workerId]
-                                workers_digest.push('<li><b>Worker : '+workerId+'</b></li>')
+                                workers_digest.push('<ul><li><b>Worker : '+workerId+'</b></li>')
                                 for(var gpuModel in theWorker.gpus){
-
                                     var wrk = theWorker.gpus[gpuModel]
                                     // need to cross reference workerId here..
                                     var domGuid = 'w-'+workerId
@@ -355,11 +351,10 @@
                                     wrk.filter(function(ww){
                                         domGuid += '_'+ww.idx
                                     })
-                                    workers_digest.push('<li id="'+domGuid+'">' + gpuModel + ' ')
+                                    workers_digest.push('<ul><li id="'+domGuid+'">' + gpuModel + '</li></ul>')
                                     //attach click handler
                                     workerClickGuids.push(domGuid)
                                     // prefilter to generate the colorcoding grading based on the nearby cards?
-                                    
                                     /*
 
                                         MAKE NEW CHART TO TRACK POWER 
@@ -387,7 +382,7 @@
                                                     //var hashrateStyle = 'background-color:'+d3ColorCodeS(adjustedColor)+';'
                                                     // probably get values from some kind of max/min temp to express
                                                     // the relationship a bit better than this....   
-                                                    var hashrateStyle = 'background-color:'+d3ColorCodeTemp(cTemp)+';'
+                                                    var hashrateStyle = 'background-color:'+d3ColorCodeS(cHashRate)+';'
                                                 }
                                             }else{
                                                 var hashrateStyle = 'background-color:none;'
@@ -396,7 +391,6 @@
                                                 var cTempStyle='background-color:'+d3ColorCodeTemp(cTemp)+';'
                                             }else{
                                                 var cTempStyle=''
-                                                
                                             }
                                             var historicalHashrates='<tr><td colspan="4">'
                                             if(typeof hisHash[workerId] != 'undefined' && typeof hisHash[workerId][w.bus_number+''] != 'undefined'){
@@ -436,15 +430,12 @@
                                                 historicalHashrates += "</td></tr>"
                                             }
                                             workers_digest.push(
-                                                '<table><tr><th class="wrk_idx">'+returnCoinImgPath(cardStats.coin)+
-                                                w.idx + ' ' + cardStats.algo+ ' '+w.power + 
-                                                '</th><td  class="wrk_temp" style="'+cTempStyle+'">'+(typeof cTemp != 'undefined' ? cTemp : '')+'</td><td class="wrk_fans" style="'+
-                                                fanStyle+'">&nbsp;</td><td class="wrk_algo_info" style="'+hashrateStyle+'">&nbsp;'+
-                                                    cHashRateString+
-                                                '</td></tr>'+
-
+                                                '<table><tbody><tr><td>'+returnCoinImgPath(cardStats.coin)+'</td><td><small>'+
+                                                  w.idx+ ' : ' + cardStats.algo+ '<br/>'+   cHashRateString + (typeof cTemp != 'undefined' ? ' : ' + cTemp + ' V' : '')+ 
+                                                '</small></td><td  class="wrk_temp" style="'+cTempStyle+'"></td><td class="wrk_fans" style="'+
+                                                fanStyle+'">&nbsp;</td><td class="wrk_algo_info" style="'+hashrateStyle+'">&nbsp;</td></tr>'+
                                                 historicalHashrates
-                                                +'</table>')
+                                                +'</tbody></table>')
 
                                         }else{
                                             workers_digest.push('<span>'+w.idx+'</span>')
@@ -462,6 +453,7 @@
                                     })
                                     workers_digest.push('</li>')
                                 }
+                                 // workers_digest.push('</ul>')
                             }
                             workers_digest.push('</ul>')
                         }
@@ -476,6 +468,7 @@
                         if(workers_digest.length > 2){
                             var docElement = document.getElementById('hiveWorkersData')
                             docElement.innerHTML=''
+                            console.log(workers_digest)
                             workers_digest.filter(function(o){
                                 docElement.innerHTML += o
                             })
@@ -492,19 +485,19 @@
                                     })
                                 })
                             }
-                            // add click handlers   
                         }
                     }
                 })
             }
             getOpenWeather = function(){
-                var endPoint = '/openWeather'
+                let endPoint = '/openWeather'
                 $.getJSON(endPoint,function(data){
                     if(typeof data == 'object' && data){
-                        var current = (typeof data.current != 'undefined'?data.current : false)
-                        var currentHourly = (typeof data.hourly != 'undefined' ? data.hourly : false)
+                        let current = (typeof data.current != 'undefined'?data.current : false)
+                        let currentHourly = (typeof data.hourly != 'undefined' ? data.hourly : false)
+                        let currentDaily = (typeof data.daily != 'undefined' ? data.daily : false)
+                        let currentString = ['<ul>']
                         if(current){
-                            var currentString = ['<ul>']
                             for(var k in current){
                                 if(typeof current[k] == 'object' && typeof current[k].filter == 'function'){
                                     // array with objects
@@ -525,15 +518,13 @@
                                 }
                             }                            
                             currentString.push('</ul>')
-
                         }
-                          var rString = '<table><thead><tr><th>Time</th><th>Temp</th><th>Feels Like</th><th>humidty</th><th>dew_point</th><th>Clouds</th><th>Wind_speed</th><th>Wind Direction</th></tr></thead>'
+                        let rString = '<table><thead><tr><th></th><th>Tem</th><th>Feel</th><th>humi</th><th>dew</th><th>Clo</th><th>Win</th><th>Dir</th></tr></thead><tbody>'
                         if(typeof currentHourly != 'undefined'){
-                            var currentHourlyString  = ''
-                          
+                            //let currentHourlyString  = ''
                             currentHourly.filter(function(o,x){
                                 // dt,temp,feels_like,pressure,humidity,temp,weather,wind_deg,wind_speed
-                                var obj = {}
+                                let obj = {}
                                 let temps = ['temp','feels_like','temp','dew_point']
                                 for(var k in o){
                                     let s = '<li>'
@@ -545,7 +536,6 @@
                                         s += k+ ' : '+kelvinToFahrenheit(o[k])
                                         obj[k] = ''
                                         obj[k] = kelvinToFahrenheit(o[k])
-                                        
                                     }else if(k == 'weather'){
                                         // todo word images for current conditions
                                     }else{
@@ -553,46 +543,131 @@
                                         s += k + ' ' + o[k]
                                     }
                                     s+='</li>'
-                                    currentHourlyString += s
+                                    //currentHourlyString += s
                                 }
                                 if(typeof obj.wind_speed != 'undefined'){
-                                    let n = '<tr>'
+                                    let n = []
                                     for(var k2 in obj){
                                         if(k2 == 'temp' || k2 == 'feels_like' || k2 == 'dew_point'){
-                                            n += "<td style='background-color:"+d3ColorCodeTemp(obj[k2])+";'>"
+                                            n.push("<td style='background-color:"+d3ColorCodeTemp(obj[k2])+";'></td>")
                                         }else if(k2 == 'wind_speed'){
-                                            n += "<td style='background-color:"+d3ColorCodeSimple(obj[k2])+";'>"
-
+                                            n.push("<td style='background-color:"+d3ColorCodeSimple(obj[k2])+";'></td>")
                                         }else if(k2 == 'clouds'){
-                                             n += "<td style='background-color:"+d3ColorCodeC(obj[k2])+";'>"
+                                            n.push("<td style='background-color:"+d3ColorCodeC(obj[k2])+";'></td>")
                                         }else if(k2 == 'humidity'){
-                                              n += "<td style='background-color:"+d3ColorCodeTemp(obj[k2])+";'>"
+                                            n.push("<td style='background-color:"+d3ColorCodeTemp(obj[k2])+";'></td>")
                                         }else if(k2 == 'pressure'){
                                               //n += "<td style='background-color:"+d3ColorCodeP(obj[k2])+";'>"
                                         }else if(k2 == 'wind_deg'){
-                                            n += "<td>"+obj[k2]+"</td>"
+                                            n.push("<td style='background-color:"+d3ColorCodeDirection(obj[k2])+";'>"+obj[k2]+"</td>")
+                                           // n.push("<td>"+obj[k2]+"</td>")
+                                        }else if(k2 == 'date'){
+                                            // convert time into color?
+                                            var time = obj[k2].split(':').shift()
+                                            n.push("<td style='background-color:"+d3ColorCodeHour(time)+";'>"+time+"</td>")
                                         }
                                     }
-                                    n+='</tr>'
-                                    rString+=n
-
+                                    // perform rearrange
+                                    n.unshift('<tr>')
+                                    n.push('</tr>')
+                                    rString+=n.join('\n')
                                 }
                             })
-                            currentString.push(currentHourlyString)
-                        }else{
-                            alert('damn')
                         }
-
-
+                        console.log(rString)
                         writeToDom('openWeatherData',rString)
 
-                        console.log(data)
-                        //
+                        if(typeof currentDaily != 'undefined' && currentDaily){
+                            // todo for real.... 
+                            return false
+                            let currentDailyR = ['<table><thead><tr><th></th><th>rise</th><th>set</th><th>temps</th><th>feels like</th><th>pressure</th><th>humidity</th><th>dew point</th><th>wind speed</th><th>wind direction</th><th>clouds</th></tr></thead><tbody>']
+                            currentDaily.filter(function(o,x){
+                                // dt,temp,feels_like,pressure,humidity,temp,weather,wind_deg,wind_speed
+                                let obj = {}
+                                let temps = ['temp','feels_like','temp','dew_point']
+                                let tempsI = ['day','min','max','night','eve','morn']
+                                for(var k in o){
+                                    let s = '<td>'
+                                    if(k == 'dt' || k == 'sunrise' || k == 'sunset'){
+                                        if(k != 'dt'){
+                                            s += unixTS_to_date(o[k])
+                                            obj.date = unixTS_to_date(o[k])
+                                        }
+                                    }else if(temps.indexOf(k) > -1){
+                                        // temps
+                                        console.log(o[k])
+                                        if(typeof o[k] == 'object'){
+                                            let dailyTemps = o[k]
+                                            if(x === 0 ){
+                                                var innerTable = ['<table class="iTable"><thead><tr><th>day</th><th>eve</th><th>morn</th><th>night</th>']
+                                                if(typeof dailyTemps.min != 'undefined' && typeof dailyTemps.max != 'undefined'){
+                                                    innerTable.push('<th>low</th><th>high</th>')
+                                                }
+                                                innerTable.push('</tr></thead><tbody><tr>')
+                                            }else{
+                                                var innerTable = ['<table  class="iTable"><tbody><tr>']
+                                            }
+                                            let tempObject = {
+                                                day : dailyTemps.day,
+                                                eve : dailyTemps.eve,
+                                                morn : dailyTemps.morn,
+                                                night  : dailyTemps.night,
+                                                low  : (dailyTemps.min ? dailyTemps.min : false),
+                                                high : (dailyTemps.max ? dailyTemps.max : false),
+                                            }
+                                            for(let k2 in dailyTemps){
+                                                //if(tempsI.indexOf(k2) > -1){
+                                                      // day,min,max,night,eve,morn
+                                                        // these are often listed out of order...
+                                                        // appropriate order :
+                                                if(dailyTemps[k2]){
+                                                    let theTemp = kelvinToFahrenheit(dailyTemps[k2])
+                                                    innerTable.push('<td style="background-color:'+d3ColorCodeTemp(theTemp)+'">'+  theTemp + '</td>')
+                                                }
+                                            }
+                                            innerTable.push('</tr></tbody></table>')
+                                            s+=innerTable.join('\n') + '</td>'
+                                        }else{
+                                            s += kelvinToFahrenheit(o[k])
+                                            obj[k] = ''
+                                            obj[k] = kelvinToFahrenheit(o[k])
+                                        }
+                                    }else if(k == 'weather'){
+                                        // todo word images for current conditions
+                                    }else{
+
+                                         if(k == 'temp' || k == 'feels_like' || k == 'dew_point'){
+                                            s +=("<td style='background-color:"+d3ColorCodeTemp(o[k])+";'>")
+                                        }else if(k == 'wind_speed'){
+                                            s +=("<td style='background-color:"+d3ColorCodeSimple(o[k])+";'>")
+                                        }else if(k == 'clouds'){
+                                            s +=("<td style='background-color:"+d3ColorCodeC(o[k])+";'>")
+                                        }else if(k == 'humidity'){
+                                            s +=("<td style='background-color:"+d3ColorCodeTemp(o[k])+";'>")
+                                        }else if(k == 'pressure'){
+                                            s += "<td style='background-color:"+d3ColorCodeP(o[k])+";'>"
+                                        }else if(k == 'wind_deg'){
+                                            s+=("<td style='background-color:"+d3ColorCodeDirection(o[k])+";'>"+o[k])
+                                            //n.push("<td>"+obj[k2]+"</td>")
+                                        }else if(o[k] != ''){
+                                            s +=  '<td>'+o[k]
+                                        }
+                                    }
+                                    //if(o[k] != ''){
+                                        s+='</td>'
+                                    //}
+                                    currentDailyR.push(s)
+                                }
+                                currentDailyR.unshift('<tr>')
+                                currentDailyR.push('</tr>')                                
+                            })
+                            writeToDom('openWeatherData2',currentDailyR.join('\n')+'</tbody></table>') 
+                        }
                     }
                 })
             }
             getTradeOgre = function(){
-                var endPoint = '/tradeOgre'
+                let endPoint = '/tradeOgre'
                 $.getJSON(endPoint,function(data){
                     if(typeof data == 'object' && data){
                         console.log(data)
@@ -600,18 +675,18 @@
                 })
             }
             getHiveFlightsheets = function(){
-                var endPoint = '/flightsheets'
+                let endPoint = '/flightsheets'
                 $.getJSON(endPoint,function(data){
                     if(typeof data == 'object' && data)
                     // assemble farm id/flightsheet id and name (if available)
                     var rows=[]
                     for(var farmId in data){
                         // FARM
-                        var farm = data[farmId]
+                        let farm = data[farmId]
                         for(var fsId in farm){
                             // FLIGHTSHEET ID
-                            var fs = farm[fsId]
-                            var toShow = {
+                            let fs = farm[fsId]
+                            let toShow = {
                                 farmId:farmId,
                                 id: fsId
                             }
@@ -628,11 +703,11 @@
                         }
                     }
                     if(rows.length>0){
-                        var result=[]
+                        let result=[]
                         rows.filter(function(r){
                             // use farmId+id for GUID
-                            var guid = r.farmId+'-'+r.id
-                            var line = '<tr id="'+guid+'"><td>'+r.name+'</td><td>'
+                            let guid = r.farmId+'-'+r.id
+                            let line = '<tr id="'+guid+'"><td>'+r.name+'</td><td>'
                             // hightlight /move flightsheets in use to top
                             // show 'favored' flightsheets after active
                             // option to hide 'untitled' flightsheets
@@ -651,18 +726,18 @@
                 })
             }
             getHiveData()
+            getOpenWeather()
             // listen to changes initated by click handler
             setInterval(
                 function(){
                     if(selectedCardIdxs.length > 0){
-                        var sCardString = ['<ul>']
+                        let sCardString = ['<ul>']
                         selectedCardIdxs.filter(function(c){
                             sCardString.push('<li>'+c+'</li>')
                         })
                         sCardString.push('</ul>')
                         sCardString.push('<table><tr><th>miner</th><th>Device String</th></tr>')
-                        
-                        var miners = ['gminer','trex','cryptodredge']
+                        let miners = ['gminer','trex','cryptodredge']
                         miners.filter(function(miner){
                             var getP=getDeviceIndexPrefix(miner,selectedCardIdxs)
                             sCardString.push('<tr><td>'+miner+'</td><td>'  +getP+'</td></tr>')
@@ -671,11 +746,9 @@
                         writeToDom('hiveSelectedIdxs',sCardString.join(''))
                     }
                     if(selectedWorkerId  !== 0){
-                        //document.getElementById('hiveSelectedWorkerId').innerHTML = selectedWorkerId
                         writeToDom('hiveSelectedWorkerId',selectedWorkerId)
                     }
                     if(selectedCard  != ''){
-                        //document.getElementById('hiveSelectedCard').innerHTML = selectedCard
                         writeToDom('hiveSelectedCard',selectedCard)
                     }
                 },1000
@@ -684,10 +757,13 @@
                 dataInt = setInterval(function(){
                     getHiveData()
                 },1000 * 10)
+                dataInt2 = setInterval(function(){
+                    getOpenWeather()
+                },1000 * 60 * 5)
             }else{
                 dataInt = false
+                dataInt2 = false
             }
         </script>
-
 	</body>
 </html>

@@ -31,6 +31,21 @@ if(!fromEnv){
 }
 
 
+if(typeof config.nicehashKey != 'undefined' && typeof config.nicehashSecret != 'undefined'){
+    const NicehashJS = require('nicehashjs2')
+    const nhClient = new NicehashJS({
+        name: 'kS',
+        apiKey: config.nicehashKey, 
+        apiSecret: config.nicehashSecret
+    })
+    console.log(nhClient.getMiningRigsStats(function(e,r){
+        console.log(e)
+        console.log(r)
+    }))
+}
+
+
+
 // to do /config validator
 // steps - on boot - check for change to card order
 // on storage store a reference that holds the name of the card + config settings
