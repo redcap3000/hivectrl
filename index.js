@@ -27,11 +27,18 @@ if(typeof process.env.hiveosAccessToken != 'undefined'){
 }
 if(!fromEnv){
 //fall back to local
+    const fs = require('fs')
     try{
-	    config = require('./config.json')
+        if (fs.existsSync('./config.json')) {
+        //file exists
+            config = require('./config.json')
+        }else{
+            config={}
+        }
     }catch(e){
         console.log("error with configuration")
         console.log(e)
+        config={}
     }
 }
 
