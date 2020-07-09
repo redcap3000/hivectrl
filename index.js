@@ -27,6 +27,7 @@ if(typeof process.env.hiveosAccessToken != 'undefined'){
 }else{
     console.log("ENV not found")
 }
+/*
 if(!fromEnv){
 //fall back to local
     const fs = require('fs')
@@ -43,7 +44,7 @@ if(!fromEnv){
         config={}
     }
 }
-
+*/
 
 if(typeof config.nicehashKey != 'undefined' && typeof config.nicehashSecret != 'undefined'){
     const NicehashJS = require('nicehashjs2')
