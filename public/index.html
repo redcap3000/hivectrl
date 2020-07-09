@@ -10,23 +10,25 @@
         <link rel="stylesheet" href="/styles.css"/>
     </head>
     <body>
-        <div id="openWeatherData"></div>
-         <div id="openWeatherData2"></div>
-            <div class="hiveContainer" id="hiveWorkersData">
-        </div>
-        <div class="hiveContainer" id="hiveFarmData">
-        </div>
-        <div class="dev" id="colorRefScale"></div>
-        <div class="hiveContainer" id="hiveSelectedWorkerId">
+    <div id="topBar">
+        <div class="hiveContainer" id="hiveHashrateData"></div>
+        <div class="hiveContainer" id="hiveFarmData"></div>
+    </div>
+
+    <div id="openWeatherData"></div>             
+    <div id="openWeatherData2"></div>
+    
+    <div class="hiveContainer" id="hiveWorkersData"></div>
+
+    
+    <div class="dev" id="colorRefScale"></div>
+    <div class="hiveContainer" id="hiveSelectedWorkerId">
         </div>
         <div class="hiveContainer" id="hiveSelectedCard">
         </div>
         <div class="hiveContainer" id="hiveSelectedIdxs">
         </div>
-        <div class="hiveContainer" id="hiveHashrateData">
-        </div>
-     
-        <button onClick="getHiveFlightsheets()">Get Flightsheets</button>
+        <!-- <button onClick="getHiveFlightsheets()">Get Flightsheets</button> -->
         <div class="hiveContainer" id="hiveFlightsheets">
         </div>
         <script>  
@@ -72,8 +74,6 @@
                     return ''
                 }
             }
-    
-
             function d3ColorCodeNegative(percent){
                 percent = parseFloat(percent)
                 if(percent  < 0){
@@ -104,12 +104,22 @@
             }
             // for basic white-greens for stuff like hashrates
             function d3ColorCodeS(percent){
-                console.log(percent)
                 percent = parseFloat(percent)
-                if(percent > 1){
-                    console.log(percent/100)
-                }
+            
                 return d3.interpolateGreens( ( percent/100 ) )
+            }
+
+            function d3ColorCodePwrHash(val){
+                if(val > 3 && val < 6){
+                    // arbitrary will have to analyize all values in the list to make a real color scale from
+                    // highest hash rate/power to lowest
+                    // this is probably eth hash (I HOPE)
+                    return d3.interpolateGreens( ( val/3.95 ) )
+                    
+                }else{
+                    // take a best guess that the value is an integer?
+                    return d3.interpolateGreens( ( val/5 ) )
+                }
             }
              function d3ColorCodeP(percent){
                 percent = parseFloat(percent)
@@ -290,32 +300,44 @@
                             var output=['<ul>']
                             var f = data.farms[farm]
                             var fieldsNames=[
-                                'Idle Power Draw',
-                                'Farm Name',
-                                'Price Per Watt',
-                                'Rig Count',
-                                'Workers Online',
-                                'Timezone',
+                              //  'Idle Power Draw',
+                                'Name',
+                                //'Price/Watt',
+                                'Total Rigs',
+                                'Online',
+                                //'Tz',
                             ]
                             var values = [
-                            f.hardware_power_draw,
+                         //   f.hardware_power_draw,
                             f.name,
-                            f.power_price,
+                            //f.power_price,
                             f.rigs_count,
                             f.stats.workers_online,
-                            f.timezone
+                            //f.timezone
                             //f.hashrates_by_coin.coin,
                             //f.hashrates_by_coin.algo,
                             //f.hashrates_by_coin.hashrate
                             ]
                             values.filter(function(val,idx){
                                 var keyName = fieldsNames[idx]
-                                output.push('<li>'+keyName+' : '+val+'</li>')
+                                // hacky stuff for shorten display output
+                                if(keyName == 'Name'){
+                                    output.push('<li><h4>')
+                                }
+                                output.push( (keyName != 'Name' && keyName != 'Tz' && keyName != 'Online' ? keyName + ' : ' : (keyName == 'Online' ? '/' : ' '))+' ' +val )
+                                if(keyName == 'Tz'){
+                                    output.push('</h4></li>')
+                                }
+                                
                             })
-                            output.push('</ul>')
+                            //output.push(' ')
+                            if(output.length > 2){
+                                writeToDom('hiveFarmData',output.join(' '))
+                            }
                             if(typeof f !='undefined' && typeof f.hashrates_by_coin != 'undefined'){
-                                var hashrates_by_coin=['<ul class="hrByCoin"><li>hashrates by coin</li>']
+                                var hashrates_by_coin=['<table class="hrByCoin"><tbody>']
                                 f.hashrates_by_coin.filter(function(hr){
+                                    console.log(hr)
                                     var hrate_check = parseFloat(hr.hashrate)
                                     if(hrate_check < 1.0){
                                         hr.hashrate =(hrate_check*1000).toFixed(2) + ' h/s' 
@@ -326,7 +348,7 @@
                                     }else if(!hrate_check){
                                         return false
                                     }
-                                    hashrates_by_coin.push("<li>"+ returnCoinImgPath(hr.coin) + ' / ' + hr.algo + ' : ' + hr.hashrate + "</li>")
+                                    hashrates_by_coin.push("<tr><td>"+ returnCoinImgPath(hr.coin) + '</td><td>' + hr.algo + ' @ ' + hr.hashrate + "</td></tr>")
                                     if(typeof hashratesByCoinRef[hr.algo] == 'undefined'){
                                         hashratesByCoinRef[hr.algo] = {}
                                     }
@@ -334,14 +356,28 @@
                                         hashratesByCoinRef[hr.algo][hr.coin]=hr.hashrate
                                     }
                                 })
-                                hashrates_by_coin.push('</ul>')
+                                hashrates_by_coin.push('</tbody></table>')
                             }
                             var workers_digest=[]
                             var workers_ref={}
                             var workerClickGuids = []
+                            // reorder/ remove workers without reporting GPU's? workers
+                            // tie into interface option to support showing/hiding offline rigs
+                            var reOrder={}
+                            for(var wId in f.workers){
+                                theWorker = f.workers[wId]
+                                if(typeof miners_stats[wId] != 'undefined'){
+                                    reOrder[wId]={}
+                                    reOrder[wId]=f.workers[wId]
+                                }
+                                //console.log(theWorker)
+                            }
+                            //if(reOrder.length !== f.workers.length){
+                            f.workers=reOrder
+                            //}
                             for(var workerId in f.workers){
                                 var theWorker = f.workers[workerId]
-                                workers_digest.push('<ul><li><b>Worker : '+workerId+'</b></li>')
+                                workers_digest.push('<h3>'+workerId+'</h3>')
                                 for(var gpuModel in theWorker.gpus){
                                     var wrk = theWorker.gpus[gpuModel]
                                     // need to cross reference workerId here..
@@ -351,7 +387,7 @@
                                     wrk.filter(function(ww){
                                         domGuid += '_'+ww.idx
                                     })
-                                    workers_digest.push('<ul><li id="'+domGuid+'">' + gpuModel + '</li></ul>')
+                                    workers_digest.push('<h4 id="'+domGuid+'">' + gpuModel + '</h4>')
                                     //attach click handler
                                     workerClickGuids.push(domGuid)
                                     // prefilter to generate the colorcoding grading based on the nearby cards?
@@ -367,7 +403,10 @@
                                             cardStats = miners_stats[workerId][w.bus_number+'']
                                             var cHashRate=convertHashrate(cardStats.hashes,true)
                                             var cHashRateString = convertHashrate(cardStats.temps)
-                                            var cTemp = w.power
+                                            var cTemp = w.power/parseFloat(convertHashrate(cardStats.hashes))
+
+                                            // divide power by rate?
+
                                             var fanStyle = 'background-color:'+d3ColorCodeInverse(cardStats.fans)+';'
                                             if(typeof hashratesByCoinRef[cardStats.algo] != 'undefined' && typeof hashratesByCoinRef[cardStats.algo][cardStats.coin] != 'undefined'){
                                                 // this is terrible.fix
@@ -382,13 +421,13 @@
                                                     //var hashrateStyle = 'background-color:'+d3ColorCodeS(adjustedColor)+';'
                                                     // probably get values from some kind of max/min temp to express
                                                     // the relationship a bit better than this....   
-                                                    var hashrateStyle = 'background-color:'+d3ColorCodeS(cHashRate)+';'
+                                                    var hashrateStyle = 'background-color:'+d3ColorCodeInverse(cHashRate)+';'
                                                 }
                                             }else{
                                                 var hashrateStyle = 'background-color:none;'
                                             }
                                             if(typeof cTemp != 'undefined'){
-                                                var cTempStyle='background-color:'+d3ColorCodeTemp(cTemp)+';'
+                                                var cTempStyle='background-color:'+d3ColorCodeInverse(cTemp*15)+';'
                                             }else{
                                                 var cTempStyle=''
                                             }
@@ -430,15 +469,21 @@
                                                 historicalHashrates += "</td></tr>"
                                             }
                                             workers_digest.push(
-                                                '<table><tbody><tr><td>'+returnCoinImgPath(cardStats.coin)+'</td><td><small>'+
-                                                  w.idx+ ' : ' + cardStats.algo+ '<br/>'+   cHashRateString + (typeof cTemp != 'undefined' ? ' : ' + cTemp + ' V' : '')+ 
-                                                '</small></td><td  class="wrk_temp" style="'+cTempStyle+'"></td><td class="wrk_fans" style="'+
-                                                fanStyle+'">&nbsp;</td><td class="wrk_algo_info" style="'+hashrateStyle+'">&nbsp;</td></tr>'+
+                                                '<table><tbody><tr><td>'+
+                                                returnCoinImgPath(cardStats.coin)+
+                                                '</td><td><small>'+
+                                                  w.idx+ ' : <span>' + cardStats.algo+ '@'+
+                                               
+                                                cHashRateString + '</span>'+
+                                                '</small></td><td  class="wrk_temp" style="'+
+                                                cTempStyle+'"></td><td class="wrk_fans" style="'+
+                                                fanStyle+'">&nbsp;</td><td class="wrk_algo_info" style="'+
+                                                hashrateStyle+'">&nbsp;</td></tr>'+
                                                 historicalHashrates
                                                 +'</tbody></table>')
 
                                         }else{
-                                            workers_digest.push('<span>'+w.idx+'</span>')
+                                            workers_digest.push('<ul><li><span>'+w.idx+'</span></li></ul>')
                                         }
                                         // fans hashes temps
                                         // for combining with data below
@@ -451,24 +496,19 @@
                                         // data to pass/ref
                                         workers_ref[workerId][w.bus_number]=gpuModel
                                     })
-                                    workers_digest.push('</li>')
                                 }
                                  // workers_digest.push('</ul>')
                             }
-                            workers_digest.push('</ul>')
                         }
-                        if(output.length > 2){
-                            writeToDom('hiveFarmData',output)
-                        }
+                       
                         if(typeof hashrates_by_coin != 'undefined'){
                             if(hashrates_by_coin.length > 2){
-                                writeToDom('hiveHashrateData',hashrates_by_coin)
+                                writeToDom('hiveHashrateData',hashrates_by_coin.join('\n'))
                             }
                         }
                         if(workers_digest.length > 2){
                             var docElement = document.getElementById('hiveWorkersData')
                             docElement.innerHTML=''
-                            console.log(workers_digest)
                             workers_digest.filter(function(o){
                                 docElement.innerHTML += o
                             })
@@ -519,7 +559,7 @@
                             }                            
                             currentString.push('</ul>')
                         }
-                        let rString = '<table><thead><tr><th></th><th>Tem</th><th>Feel</th><th>humi</th><th>dew</th><th>Clo</th><th>Win</th><th>Dir</th></tr></thead><tbody>'
+                        let rString = '<table><tbody>'
                         if(typeof currentHourly != 'undefined'){
                             //let currentHourlyString  = ''
                             currentHourly.filter(function(o,x){
@@ -559,7 +599,7 @@
                                         }else if(k2 == 'pressure'){
                                               //n += "<td style='background-color:"+d3ColorCodeP(obj[k2])+";'>"
                                         }else if(k2 == 'wind_deg'){
-                                            n.push("<td style='background-color:"+d3ColorCodeDirection(obj[k2])+";'>"+obj[k2]+"</td>")
+                                            n.push("<td style='background-color:"+d3ColorCodeDirection(obj[k2])+";'></td>")
                                            // n.push("<td>"+obj[k2]+"</td>")
                                         }else if(k2 == 'date'){
                                             // convert time into color?
@@ -574,7 +614,6 @@
                                 }
                             })
                         }
-                        console.log(rString)
                         writeToDom('openWeatherData',rString)
 
                         if(typeof currentDaily != 'undefined' && currentDaily){

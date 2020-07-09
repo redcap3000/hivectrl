@@ -1,12 +1,35 @@
+
+
+h3,h4{
+	margin-top:0;
+	padding-top:0;
+}
+h3{
+	text-align: right;
+}
+h4{
+	margin-bottom:5px;
+}
+img{
+	width:40px;
+	height:40px;
+}
 table{
 	  border-collapse: collapse;
-	  width:50%;
+	  margin:0;
+	  padding:0;
 	  float:left;
 }
+.hrByCoin{
+	width:100%;
+	clear:both;
+}
+
 
 #openWeatherData,#openWeatherData2 > table{
-width:50%;
+width:25%;
 float:left;
+clear:left;
 margin:0;
 padding:0;
 }
@@ -27,13 +50,21 @@ padding:0;
 
 #hiveWorkersData{
 	float:right;
-	width:46%;
-	margin:2%;
+	width:65%;
+	margin:1%;
 	margin-top:0;
 }
-#hiveFarmData{
-	float:right;
+#openWeatherData td{
+	width:80px;
+}
+#hiveFarmData,#hiveHashrateData{
+	float:left;
+	width:50%;
+	margin:0;
 
+}
+#hiveHasrateData{
+	float:left;
 }
 .hrByCoin li{
 	width:100%;
