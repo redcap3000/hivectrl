@@ -24,6 +24,8 @@ if(typeof process.env.hiveosAccessToken != 'undefined'){
 	}else{
 		fromEnv = false
 	}
+}else{
+    console.log("ENV not found")
 }
 if(!fromEnv){
 //fall back to local
