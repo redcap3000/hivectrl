@@ -17,7 +17,11 @@ if(typeof process.env.hiveosAccessToken != 'undefined'){
 	if(typeof process.env.hiveosLogin != 'undefined'){
 		config.hiveosLogin = process.env.hiveosLogin
 		if(typeof process.env.hiveosPass != 'undefined'){
-			config.hiveosPass = process.env.hiveosPass	
+			config.hiveosPass = process.env.hiveosPass
+            // load openweather stuff
+            if(typeof process.env.openWeatherKey != 'undefined'){
+                config.openWeatherKey = process.env.openWeatherKey
+            }	
 		}else{
 			fromEnv = false
 		}
@@ -27,7 +31,6 @@ if(typeof process.env.hiveosAccessToken != 'undefined'){
 }else{
     console.log("ENV not found")
 }
-/*
 if(!fromEnv){
 //fall back to local
     const fs = require('fs')
@@ -44,7 +47,7 @@ if(!fromEnv){
         config={}
     }
 }
-*/
+
 
 if(typeof config.nicehashKey != 'undefined' && typeof config.nicehashSecret != 'undefined'){
     const NicehashJS = require('nicehashjs2')

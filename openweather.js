@@ -1,4 +1,6 @@
-const config = require('./config.json');
+
+//const config = require('./config.json');
+
 const fetch = require('node-fetch');
 var openWeatherCallback = (r,e) => {
 	if(typeof e != 'undefined' && e != null){
