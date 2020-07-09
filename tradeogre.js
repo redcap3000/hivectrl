@@ -4,6 +4,7 @@ if(typeof config.togreKey != 'undefined' && typeof config.togreSecret != 'undefi
 	var tradeOgre = new TradeOgre( config.togreKey, config.togreSecret );
 	var tradeOgrePublic = new TradeOgre()
 }else{
+	console.log('***tOgre key issue')
 	return false
 }
 /*

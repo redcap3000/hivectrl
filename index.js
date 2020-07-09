@@ -116,7 +116,7 @@ if(typeof config.hiveosAccessToken != 'undefined' && typeof config.hiveosLogin !
         getAllWorkersLoop()
         var hiveMainInterval = setInterval(function(){getAllWorkersLoop()},7 * 1000)
         // trade ogre interval 30 seconds?
-        if(typeof tradeOgre != 'undefined' && tradeOgre){
+        if(typeof tradeOgre != 'undefined' && tradeOgre && typeof tradeOgre.main_loop() != 'undefined'){
             tradeOgre.main_loop()
         }
         if(typeof openWeather != 'undefined' && openWeather){
