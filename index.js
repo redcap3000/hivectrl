@@ -119,7 +119,7 @@ if(typeof config.hiveosAccessToken != 'undefined' && typeof config.hiveosLogin !
         if(typeof tradeOgre != 'undefined' && tradeOgre && typeof tradeOgre.main_loop == 'function'){
             tradeOgre.main_loop()
         }
-        if(typeof openWeather != 'undefined' && openWeather){
+        if(typeof openWeather != 'undefined' && openWeather && typeof openWeather.main_loop == 'function'){
             openWeather.main_loop()
         }
 
