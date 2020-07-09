@@ -27,7 +27,12 @@ if(typeof process.env.hiveosAccessToken != 'undefined'){
 }
 if(!fromEnv){
 //fall back to local
-	config = require('./config.json')
+    try{
+	    config = require('./config.json')
+    }catch(e){
+        console.log("error with configuration")
+        console.log(e)
+    }
 }
 
 
