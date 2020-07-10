@@ -350,7 +350,7 @@
                                     }else if(!hrate_check){
                                         return false
                                     }
-                                    hashrates_by_coin.push("<tr><td>"+ returnCoinImgPath(hr.coin) + '</td><td>' + hr.algo + ' @ ' + hr.hashrate + "</td></tr>")
+                                    hashrates_by_coin.push("<tr><td>"+ returnCoinImgPath(hr.coin) + '</td><td><h4>' + hr.algo + ' @ ' + hr.hashrate + "</h4></td></tr>")
                                     if(typeof hashratesByCoinRef[hr.algo] == 'undefined'){
                                         hashratesByCoinRef[hr.algo] = {}
                                     }
@@ -564,7 +564,7 @@
                             }                            
                             currentString.push('</ul>')
                         }
-                        let rString = '<table><tbody>'
+                        let rString = '<h4>Hourly Weather</h4><table><tbody>'
                         if(typeof currentHourly != 'undefined'){
                             //let currentHourlyString  = ''
                             currentHourly.filter(function(o,x){
@@ -613,7 +613,7 @@
                                         }
                                     }
                                     // perform rearrange
-                                    n.unshift('<tr style="height:5px;">')
+                                    n.unshift('<tr style="height:6px;">')
                                     n.push('</tr>')
                                     rString+=n.join('\n')
                                 }
