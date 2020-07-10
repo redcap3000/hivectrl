@@ -13,10 +13,12 @@
     <div id="topBar">
         <div class="hiveContainer" id="hiveHashrateData"></div>
         <div class="hiveContainer" id="hiveFarmData"></div>
+
+            <div id="openWeatherData"></div>             
+    <div id="openWeatherData2"></div>
     </div>
 
-    <div id="openWeatherData"></div>             
-    <div id="openWeatherData2"></div>
+
     
     <div class="hiveContainer" id="hiveWorkersData"></div>
 
@@ -387,7 +389,7 @@
                                     wrk.filter(function(ww){
                                         domGuid += '_'+ww.idx
                                     })
-                                    workers_digest.push('<h4 id="'+domGuid+'">' + gpuModel + '</h4>')
+                                    //workers_digest.push('<h4 id="'+domGuid+'">' + gpuModel + '</h4>')
                                     //attach click handler
                                     workerClickGuids.push(domGuid)
                                     // prefilter to generate the colorcoding grading based on the nearby cards?
@@ -469,13 +471,14 @@
                                                 historicalHashrates += "</td></tr>"
                                             }
                                             workers_digest.push(
-                                                '<table><tbody><tr><td>'+
-                                                returnCoinImgPath(cardStats.coin)+
-                                                '</td><td><small>'+
-                                                  w.idx+ ' : <span>' + cardStats.algo+ '@'+
+                                                '<table><tbody><tr>'+
+                                                //returnCoinImgPath(cardStats.coin)+
+                                                //'</td><td><small>'+
+                                                 // w.idx+ ' : <span>' + cardStats.algo+ ' @ '+
                                                
-                                                cHashRateString + '</span>'+
-                                                '</small></td><td  class="wrk_temp" style="'+
+                                                // cHashRateString + '</span>'+
+                                                //'</small></td>
+                                                '<td  class="wrk_temp" style="'+
                                                 cTempStyle+'"></td><td class="wrk_fans" style="'+
                                                 fanStyle+'">&nbsp;</td><td class="wrk_algo_info" style="'+
                                                 hashrateStyle+'">&nbsp;</td></tr>'+
@@ -483,7 +486,7 @@
                                                 +'</tbody></table>')
 
                                         }else{
-                                            workers_digest.push('<ul><li><span>'+w.idx+'</span></li></ul>')
+                                            //workers_digest.push('<ul><li><span>'+w.idx+'</span></li></ul>')
                                         }
                                         // fans hashes temps
                                         // for combining with data below
@@ -513,6 +516,7 @@
                                 docElement.innerHTML += o
                             })
                             writeToDom('hiveWorkersData',workers_digest)
+                            /*
                             if(workerClickGuids.length > 0){
                                 workerClickGuids.filter(function(wrkr){
                                     document.getElementById(wrkr).addEventListener("click",function(){
@@ -525,6 +529,7 @@
                                     })
                                 })
                             }
+                            */
                         }
                     }
                 })
@@ -604,11 +609,11 @@
                                         }else if(k2 == 'date'){
                                             // convert time into color?
                                             var time = obj[k2].split(':').shift()
-                                            n.push("<td style='background-color:"+d3ColorCodeHour(time)+";'>"+time+"</td>")
+                                            n.push("<td style='background-color:"+d3ColorCodeHour(time)+";'></td>")
                                         }
                                     }
                                     // perform rearrange
-                                    n.unshift('<tr>')
+                                    n.unshift('<tr style="height:5px;">')
                                     n.push('</tr>')
                                     rString+=n.join('\n')
                                 }
@@ -804,5 +809,7 @@
                 dataInt2 = false
             }
         </script>
-	</body>
+	
+
+    </body>
 </html>

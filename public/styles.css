@@ -1,14 +1,17 @@
-
+body{
+	background-color:	#696969 ;
+	color:white;
+}
 
 h3,h4{
-	margin-top:0;
-	padding-top:0;
+	margin:0;
+	padding:0;
+	font-size:12px;
 }
 h3{
 	text-align: right;
 }
 h4{
-	margin-bottom:5px;
 }
 img{
 	width:40px;
@@ -25,18 +28,17 @@ table{
 	clear:both;
 }
 
-
+td#hiveWorkersData {
+	height:10px;
+}
 #openWeatherData,#openWeatherData2 > table{
-width:25%;
+	margin-top:20px;
+width:15%;
 float:left;
 clear:left;
-margin:0;
-padding:0;
+
 }
-#openWeatherData2 > table{
-	clear:right;
-	padding-bottom:10px;
-}
+
 #openWeatherData,#openWeatherData2 > small{
 	float:left;
 }
@@ -50,9 +52,8 @@ padding:0;
 
 #hiveWorkersData{
 	float:right;
-	width:65%;
+	width:80%;
 	margin:1%;
-	margin-top:0;
 }
 #openWeatherData td{
 	width:80px;
@@ -68,24 +69,20 @@ padding:0;
 }
 .hrByCoin li{
 	width:100%;
-	height:52px;
+	height:4px;
 }
 .wrk_idx,.wrk_temp,.wrk_fans{
-	width:35px;
+	width:33%;
 	text-align: center;
 }
-.wrk_fans{
-	width:10px;
-}
+
 .hhBox{
 	width:2%;
-	height:20px;
+	height:4px;
 	border-color:black;
 	float:left;
 }
-.wrk_algo_info{
-width:50%;
-}
+
  table{
 	width:100%;
 }
@@ -97,7 +94,6 @@ width:50%;
 }
 .coinImg{
 	float:left;
-	width:10 !IMPORTANT;
 }
 td.iTable {
 	float:left;
