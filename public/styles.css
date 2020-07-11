@@ -76,6 +76,12 @@ clear:left;
 	text-align: center;
 }
 
+
+
+#nicehashData th{
+	text-align:left;
+}
+
 .hhBox{
 	width:2%;
 	height:4px;

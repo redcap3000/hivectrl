@@ -11,11 +11,13 @@
     </head>
     <body>
     <div id="topBar">
-        <div class="hiveContainer" id="hiveHashrateData"></div>
-        <div class="hiveContainer" id="hiveFarmData"></div>
 
-            <div id="openWeatherData"></div>             
-    <div id="openWeatherData2"></div>
+        <div class="hiveContainer" id="hiveHashrateData"></div>
+      
+        
+        <div class="hiveContainer" id="hiveFarmData"></div>
+        <div id="openWeatherData"></div>             
+        <div id="openWeatherData2"></div>
     </div>
 
 
@@ -710,11 +712,83 @@
                     }
                 })
             }
+            getNicehashApi = function(){
+                let endPoint = '/nicehashData'
+                $.getJSON(endPoint,function(data){
+                    if(typeof data == 'object' && data){
+                        if(typeof data.activeWorkers != 'undefined'){
+                            if(data.activeWorkers.length > 0){
+                                let nhWorkers = []
+                                let omitFields = ['unpaidAmount','xnsub']
+                                let rejectFields = ['speedRejectedTotal','speedRejectedR1Target','speedRejectedR2Stale','speedRejectedR3Duplicate','speedRejectedR4NTime','speedRejectedR5Other']
+                                let timeFields = ['statsTime','timeConnected']
+                                data.activeWorkers.filter(function(w){
+                                    let wrk = {}
+                                    wrk.rejections={}
+                                    wrk.time={}
+                                    for(let k in w){
+                                        if(omitFields.indexOf(k) == -1 && rejectFields.indexOf(k) == -1 && timeFields.indexOf(k) == -1){
+                                            wrk[k] = w[k]
+                                        }else if(rejectFields.indexOf(k) > -1 && timeFields.indexOf(k) == -1){
+                                            // handle this gracefully?
+                                            wrk.rejections[k]= w[k]
+                                        }else if(timeFields.indexOf(k) > -1){
+                                            wrk.time[k]= new Date(w[k] * 1000)
+                                        }
+                                    }
+                                    /*
+                                    algorithm: "DAGGERHASHIMOTO"
+                                    difficulty: 0.8
+                                    profitability: 0.000776135593220339
+                                    rigName: "ETHMONSTER"
+                                    speedAccepted: 266.64473249139803
+                                    speedRejectedR1Target: 0
+                                    speedRejectedR2Stale: 0
+                                    speedRejectedR3Duplicate: 0
+                                    speedRejectedR4NTime: 0
+                                    speedRejectedR5Other: 0
+                                    speedRejectedTotal: 0
+                                    statsTime: 1594428801000
+                                    timeConnected: 1594406086307
+                                    unpaidAmount: "0.00002105"
+                                    xnsub: true
+                                    */
+                                    nhWorkers.push(wrk)
+                                })
+                                if(nhWorkers.length > 0){
+                                    let f = ['<table><thead><tr>']
+
+                                    let permitFields = ['rigName','speedAccepted','algorithm','difficulty','profitability']
+                                    permitFields.filter(function(tf){
+                                        f.push('<th>'+tf+'</th>')
+                                    })
+                                    f.push('</tr></thead><tbody>')
+                                    nhWorkers.filter(function(w2){
+                                        let ff = ['<tr>']
+                                        permitFields.filter(function(x){
+                                            if(x == 'profitability' || x == 'speedAccepted'){
+                                               ff.push('<td>'+w2[x].toFixed(8)+'</td>') 
+                                           }else{
+                                                ff.push('<td>'+w2[x]+'</td>')
+                                           }
+                                        })
+                                        ff.push('</tr>')
+                                        f.push(ff.join('\n'))
+                                    })
+
+                                    writeToDom('nicehashData','<table>'+f.join('\n')+'</tbody></table>')
+                                }
+                            }
+                        }
+                    }
+                })
+            }
             getTradeOgre = function(){
                 let endPoint = '/tradeOgre'
                 $.getJSON(endPoint,function(data){
                     if(typeof data == 'object' && data){
                         console.log(data)
+
                     }
                 })
             }
@@ -771,6 +845,7 @@
             }
             getHiveData()
             getOpenWeather()
+            getNicehashApi()
             // listen to changes initated by click handler
             setInterval(
                 function(){
@@ -804,12 +879,17 @@
                 dataInt2 = setInterval(function(){
                     getOpenWeather()
                 },1000 * 60 * 5)
+                dataInt3 = setInterval(function(){
+                    getNicehashApi()
+                },1000 * 15)
             }else{
                 dataInt = false
                 dataInt2 = false
             }
         </script>
 	
-
+    <div id="bottomBar">
+  <div id="nicehashData"></div>
+    </div>
     </body>
 </html>

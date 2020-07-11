@@ -57,11 +57,10 @@ if(!fromEnv){
 
 
 if(typeof config.nicehashKey != 'undefined' && typeof config.nicehashSecret != 'undefined' && typeof config.nicehashOrgId != 'undefined'){
-      console.log(NicehashV2API)
-    var log = function () {
-        return console.log(...arguments);
-    }
-
+   
+    setInterval(function(){
+    // FIX THIS turn into function!
+    //    console.log("Getting nicehash from interval 10000 seconds")
     var algo, pool, order;
     const api =  new NicehashV2API({
         apiHost : 'https://api2.nicehash.com',
@@ -69,17 +68,13 @@ if(typeof config.nicehashKey != 'undefined' && typeof config.nicehashSecret != '
         apiSecret : config.nicehashSecret,
         ordId : config.nicehashOrgId
     });
- let replaceNHData = function(key,r){
+    let replaceNHData = function(key,r){
             NicehashData[key] = {}
             NicehashData[key] = r
         }
     // get server time - required
+
     api.getTime()
-        .then(() => {
-            log('server time', api.time)
-            log('--')
-        })
-       
         // get algo settings
         /// api/v2/mining/rigs/activeWorkers/
         .then(() => api.get('/main/api/v2/mining/rigs/activeWorkers/'))
@@ -150,10 +145,8 @@ if(typeof config.nicehashKey != 'undefined' && typeof config.nicehashSecret != '
                 newList.push(newObj)
              })
              // first day/last day?
-         
-             
-             console.log("Max date : " + new Date( Math.max.apply(Math, newList.map(function(o) { return o.created; }))* 1000 ) )
-             console.log("Min date : " + new Date( Math.min.apply(Math, newList.map(function(o) { return o.created; }))* 1000 ) )
+             //console.log("Max date : " + new Date( Math.max.apply(Math, newList.map(function(o) { return o.created; }))* 1000 ) )
+             //console.log("Min date : " + new Date( Math.min.apply(Math, newList.map(function(o) { return o.created; }))* 1000 ) )
              
              replaceNHData('payouts',{
                  totalPay : totalAmount.toFixed(8),
@@ -172,7 +165,7 @@ if(typeof config.nicehashKey != 'undefined' && typeof config.nicehashSecret != '
             if(err && err.response) log(err.response.request.method,err.response.request.uri.href);
             log('ERROR', err.error || err);
         })
-
+    },10000)
 }
 
 
