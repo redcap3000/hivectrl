@@ -166,6 +166,8 @@ if(typeof config.nicehashKey != 'undefined' && typeof config.nicehashSecret != '
             log('ERROR', err.error || err);
         })
     },10000)
+}else{
+    console.log("Problem loading nicehashKey/secret")
 }
 
 
