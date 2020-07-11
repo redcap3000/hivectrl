@@ -35,6 +35,11 @@ if(typeof process.env.hiveosAccessToken != 'undefined'){
 	}else{
 		fromEnv = false
 	}
+    if(typeof process.env.nicehashKey != 'undefined' && typeof process.env.nicehashSecret != 'undefined' && typeof process.env.nicehashOrgId != 'undefined'){
+        config.nicehashKey = process.env.nicehashKey
+        config.nicehashSecret = process.env.nicehashSecret
+        config.nicehashOrgId = process.env.nicehashOrgId
+    }
 }else{
     console.log("ENV not found")
 }
@@ -168,6 +173,7 @@ if(typeof config.nicehashKey != 'undefined' && typeof config.nicehashSecret != '
     },10000)
 }else{
     console.log("Problem loading nicehashKey/secret")
+    console.log(config)
 }
 
 
