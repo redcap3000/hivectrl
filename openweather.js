@@ -9,7 +9,6 @@ var openWeatherCallback = (r,e) => {
 		r.data = false
 		return r
 	}else if(typeof r != 'undefined'){
-		console.log(r)
 		return (r)
 	}else{
 		// other error?
