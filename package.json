@@ -17,10 +17,13 @@
   "author": "Ronaldo Barbachano",
   "license": "ISC",
   "dependencies": {
+    "crypto-js": "^4.0.0",
     "express": "^4.17.1",
     "fetch": "^1.1.0",
     "node-fetch": "^2.6.0",
     "promises": "^0.2.5",
+    "qs": "^6.9.4",
+    "request-promise-native": "^1.0.8",
     "tradeogre-api": "^1.1.6"
   },
   "devDependencies": {

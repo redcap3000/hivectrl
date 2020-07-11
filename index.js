@@ -1,3 +1,10 @@
+//import config from './config'
+var NicehashV2API = require('./nicehashV2API.js');
+
+NicehashData = {} 
+//require("./exchange");
+
+
 process.on('SIGTERM', () => {
     console.info('SIGTERM signal received.');
 });
@@ -49,17 +56,123 @@ if(!fromEnv){
 }
 
 
-if(typeof config.nicehashKey != 'undefined' && typeof config.nicehashSecret != 'undefined'){
-    const NicehashJS = require('nicehashjs2')
-    const nhClient = new NicehashJS({
-        name: 'kS',
-        apiKey: config.nicehashKey, 
-        apiSecret: config.nicehashSecret
-    })
-    console.log(nhClient.getMiningRigsStats(function(e,r){
-        console.log(e)
-        console.log(r)
-    }))
+if(typeof config.nicehashKey != 'undefined' && typeof config.nicehashSecret != 'undefined' && typeof config.nicehashOrgId != 'undefined'){
+      console.log(NicehashV2API)
+    var log = function () {
+        return console.log(...arguments);
+    }
+
+    var algo, pool, order;
+    const api =  new NicehashV2API({
+        apiHost : 'https://api2.nicehash.com',
+        apiKey : config.nicehashKey,
+        apiSecret : config.nicehashSecret,
+        ordId : config.nicehashOrgId
+    });
+ let replaceNHData = function(key,r){
+            NicehashData[key] = {}
+            NicehashData[key] = r
+        }
+    // get server time - required
+    api.getTime()
+        .then(() => {
+            log('server time', api.time)
+            log('--')
+        })
+       
+        // get algo settings
+        /// api/v2/mining/rigs/activeWorkers/
+        .then(() => api.get('/main/api/v2/mining/rigs/activeWorkers/'))
+        .then(res => {
+            // figure out the keyname from res?
+            let workers = res.workers
+            let newWorkers = []
+            let omitFields = ['market','proxyId']
+            workers.filter(function(w,id){
+                let newWorker = {}
+                for(let k in w){
+                    if(omitFields.indexOf(k) == -1){
+                        newWorker[k]={}
+                        if(k == 'algorithm'){
+                            newWorker[k]=w[k].enumName
+                        }else{
+                            newWorker[k]=w[k]
+                        }   
+                    }
+                }
+                newWorkers.push(newWorker)
+            })
+            replaceNHData('activeWorkers',newWorkers)
+        })
+
+        // get balance
+        .then(() => api.get('/main/api/v2/accounting/accounts2/'))
+         .then(res => {
+             let newObj = {total:res.total}
+             replaceNHData('totalBalance',res.total)
+         })
+         // rigs payouts
+        .then(() => api.get('/main/api/v2/mining/rigs/payouts/'))
+         .then(res => {
+             // i only need accounts.total
+             // recalculate 'totals'
+             let list = res.list
+             let omitFields = ['id','accountType']
+             let newList = []
+             let totalAmount = 0.0
+             let totalFeeAmount = 0.0
+             list.filter(function(item,idx){
+                 let newObj = {}
+
+                 for(let k in item){
+                     if(omitFields.indexOf(k) == -1){
+                         // change created into datestamp?
+                         newObj[k] = {}
+                         if(k == 'currency'){
+                             newObj[k] = item[k].enumName
+                         }else if(k =='amount'){
+                             let amount = parseFloat(item[k])
+                             if(amount){
+                                 totalAmount += amount
+                             }
+                             newObj[k] = item[k]
+                         }else if(k =='feeAmount'){
+                             let amount = parseFloat(item[k])
+                             if(amount){
+                                 totalFeeAmount += amount
+                             }
+                              newObj[k] = item[k]
+                         }else{
+                             newObj[k] = item[k]
+                         }
+                     }
+                 }
+                newList.push(newObj)
+             })
+             // first day/last day?
+         
+             
+             console.log("Max date : " + new Date( Math.max.apply(Math, newList.map(function(o) { return o.created; }))* 1000 ) )
+             console.log("Min date : " + new Date( Math.min.apply(Math, newList.map(function(o) { return o.created; }))* 1000 ) )
+             
+             replaceNHData('payouts',{
+                 totalPay : totalAmount.toFixed(8),
+                 totalFees : totalFeeAmount.toFixed(8),
+                 dateRange : {
+                     start : Math.min.apply(Math, newList.map(function(o) { return o.created; })),
+                     stop : Math.max.apply(Math, newList.map(function(o) { return o.created; }))
+                 }
+             })
+         })
+
+
+///v2/mining/rigs/payouts/
+
+        .catch(err => {
+            if(err && err.response) log(err.response.request.method,err.response.request.uri.href);
+            log('ERROR', err.error || err);
+        })
+
 }
 
 
@@ -156,6 +269,14 @@ if(typeof config.hiveosAccessToken != 'undefined' && typeof config.hiveosLogin !
             response.send(JSON.stringify(r));
         })
     }
+
+    //if(typeof config.nicehashKey != 'undefined' && typeof config.nicehashSecret != 'undefined' && typeof config.nicehashOrgId != 'undefined'){
+        app.get('/nicehashData', function(request, response) {
+            response.setHeader('Content-Type', 'application/json');
+            //console.log(hiveMiners)
+            response.send(JSON.stringify(NicehashData));
+        })
+    //}
 
     if(typeof openWeather != 'undefined' && openWeather){
         app.get('/openWeather', function(request, response) {
