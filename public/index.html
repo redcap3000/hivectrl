@@ -12,10 +12,9 @@
     <body>
     <div id="topBar">
 
-        <div class="hiveContainer" id="hiveHashrateData"></div>
+     
       
         
-        <div class="hiveContainer" id="hiveFarmData"></div>
         <div id="openWeatherData"></div>             
         <div id="openWeatherData2"></div>
     </div>
@@ -301,7 +300,7 @@
                                     }
                                 })
                             }
-                            var output=['<ul>']
+                            var output=[]
                             var f = data.farms[farm]
                             var fieldsNames=[
                               //  'Idle Power Draw',
@@ -326,11 +325,11 @@
                                 var keyName = fieldsNames[idx]
                                 // hacky stuff for shorten display output
                                 if(keyName == 'Name'){
-                                    output.push('<li><h4>')
+                                    output.push('<h4>')
                                 }
                                 output.push( (keyName != 'Name' && keyName != 'Tz' && keyName != 'Online' ? keyName + ' : ' : (keyName == 'Online' ? '/' : ' '))+' ' +val )
                                 if(keyName == 'Tz'){
-                                    output.push('</h4></li>')
+                                    output.push('</h4>')
                                 }
                                 
                             })
@@ -339,9 +338,9 @@
                                 writeToDom('hiveFarmData',output.join(' '))
                             }
                             if(typeof f !='undefined' && typeof f.hashrates_by_coin != 'undefined'){
-                                var hashrates_by_coin=['<table class="hrByCoin"><tbody>']
+                                var hashrates_by_coin=['<span class="hrByCoin">']
                                 f.hashrates_by_coin.filter(function(hr){
-                                    console.log(hr)
+                                    hashrates_by_coin.push('<h4>')
                                     var hrate_check = parseFloat(hr.hashrate)
                                     if(hrate_check < 1.0){
                                         hr.hashrate =(hrate_check*1000).toFixed(2) + ' h/s' 
@@ -352,15 +351,16 @@
                                     }else if(!hrate_check){
                                         return false
                                     }
-                                    hashrates_by_coin.push("<tr><td>"+ returnCoinImgPath(hr.coin) + '</td><td><h4>' + hr.algo + ' @ ' + hr.hashrate + "</h4></td></tr>")
+                                    hashrates_by_coin.push( hr.algo + ' @ ' + hr.hashrate + '<span class="hrByCoinImg">'+  returnCoinImgPath(hr.coin) +'</span>')
                                     if(typeof hashratesByCoinRef[hr.algo] == 'undefined'){
                                         hashratesByCoinRef[hr.algo] = {}
                                     }
                                     if(typeof hashratesByCoinRef[hr.algo][hr.coin] == 'undefined'){
                                         hashratesByCoinRef[hr.algo][hr.coin]=hr.hashrate
                                     }
+                                    hashrates_by_coin.push('</h4>')
                                 })
-                                hashrates_by_coin.push('</tbody></table>')
+                                hashrates_by_coin.push('</span>')
                             }
                             var workers_digest=[]
                             var workers_ref={}
@@ -756,20 +756,36 @@
                                     nhWorkers.push(wrk)
                                 })
                                 if(nhWorkers.length > 0){
-                                    let f = ['<table><thead><tr>']
+                                    let f = ['<b>Nicehash Workers</b><table><thead><tr>']
 
                                     let permitFields = ['rigName','speedAccepted','algorithm','difficulty','profitability']
-                                    permitFields.filter(function(tf){
-                                        f.push('<th>'+tf+'</th>')
-                                    })
+                                   /* permitFields.filter(function(tf){
+                                        if(tf == 'speedAccepted'){
+                                            f.push('<th>rate</th>')
+
+                                        }else if(tf == 'rigName'){
+                                            f.push('<th>Name</th>')
+                                        }else{
+                                            f.push('<th>'+tf+'</th>')
+
+                                        }
+                                    })*/
                                     f.push('</tr></thead><tbody>')
                                     nhWorkers.filter(function(w2){
                                         let ff = ['<tr>']
                                         permitFields.filter(function(x){
                                             if(x == 'profitability' || x == 'speedAccepted'){
-                                               ff.push('<td>'+w2[x].toFixed(8)+'</td>') 
+                                                 if(x == 'speedAccepted'){
+                                                         ff.push('<td>'+w2[x].toFixed(2)+' mh/s</td>')
+                                                    }else{
+                                                        ff.push('<td>'+w2[x].toFixed(8)+'</td>')    
+                                                    }
                                            }else{
-                                                ff.push('<td>'+w2[x]+'</td>')
+                                                if(w2[x] == 'DAGGERHASHIMOTO'){
+                                                    ff.push('<td>ethhash</td>')
+                                                }else{
+                                                    ff.push('<td>'+w2[x]+'</td>')
+                                                }
                                            }
                                         })
                                         ff.push('</tr>')
@@ -889,7 +905,11 @@
         </script>
 	
     <div id="bottomBar">
-  <div id="nicehashData"></div>
+        <div class="hiveContainer" id="hiveFarmData"></div>
+
+        <div class="hiveContainer" id="hiveHashrateData"></div>
+        <div id="nicehashData"></div>
+    
     </div>
     </body>
 </html>
