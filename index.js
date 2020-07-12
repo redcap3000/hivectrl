@@ -52,10 +52,8 @@ let timeSince =  (date)=> {
 
 twoMinersPoolsAccounts.filter((p,idx)=>{
     p.then((res)=>{
-        
         for(let rig in res){
             var theRig = res[rig]
-
             //lastbeat(unixts),hr(float),hr2(float),offline(bool)
             let lastBlock = timeSince(new Date(theRig.lastBeat * 1000))
             let theCoin = twoMinersStatsIdx[idx]
