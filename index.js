@@ -24,6 +24,7 @@ let mintpondPoolsAccounts = new poolApi('https://api.mintpond.com/v1/zcoin/miner
 twoMinersStatsIdx = ['rvn','xzc']
 
 twoMinersStats = {}
+
 let timeSince =  (date)=> {
   var seconds = Math.floor((new Date() - date) / 1000);
   var interval = Math.floor(seconds / 31536000);
@@ -51,8 +52,10 @@ let timeSince =  (date)=> {
 
 twoMinersPoolsAccounts.filter((p,idx)=>{
     p.then((res)=>{
+        
         for(let rig in res){
             var theRig = res[rig]
+
             //lastbeat(unixts),hr(float),hr2(float),offline(bool)
             let lastBlock = timeSince(new Date(theRig.lastBeat * 1000))
             let theCoin = twoMinersStatsIdx[idx]
@@ -73,7 +76,8 @@ twoMinersPoolsAccounts.filter((p,idx)=>{
     })
 })
 mintpondPoolsAccounts.then((res)=>{
-    console.log(res)
+  //  console.log('mintpnd')
+    //console.log(res)
 })
 twoMinersPoolsStats.filter((p,idx)=>{
      p.then((res)=>{
@@ -371,7 +375,16 @@ if(typeof config.hiveosAccessToken != 'undefined' && typeof config.hiveosLogin !
         app.get('/2MinersData', function(request, response) {
             response.setHeader('Content-Type', 'application/json');
             //console.log(hiveMiners)
-            response.send(JSON.stringify(twoMinersStats));
+           // console.log(twoMinersStats)
+            let enforce = {}
+            twoMinersStatsIdx.filter((o)=>{
+                if(typeof twoMinersStats[o] != 'undefined'){
+                    enforce[o]={}
+                    enforce[o]=twoMinersStats[o]    
+                }
+            })
+
+            response.send(JSON.stringify(enforce));
         })
     if(typeof openWeather != 'undefined' && openWeather){
         app.get('/openWeather', function(request, response) {

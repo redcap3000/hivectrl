@@ -50,7 +50,7 @@ clear:left;
 	list-style-type: none;	
 }
 
-#hiveWorkersData,#hiveFarmData,#hiveHashrateData,#nicehashData,#twoMinersData{
+#hiveWorkersData,#hiveFarmData,#hiveHashrateData,#nicehashData,#twoMinersData,#twoMinersDataLastBlocks{
 	float:right;
 	width:80%;
 	margin:1%;
