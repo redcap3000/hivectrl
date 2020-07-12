@@ -1,6 +1,94 @@
 //import config from './config'
 var NicehashV2API = require('./nicehashV2API.js');
 
+var poolApi = require('./poolApi.js');
+
+// POOLS?
+let getPools = ()=>{
+
+
+let twoMinersPoolsAccounts = new poolApi(['https://rvn.2miners.com/api/accounts/RGuttSk2qyFDSdwbhwxSXR5G9wU21gYkdh',
+                      'https://xzc.2miners.com/api/accounts/a9UKiXi6FS3kmKpnyrB4YpiDShFcmyscXy'], (res)=>{
+    return res.workers
+} ) 
+let twoMinersPoolsStats = new poolApi(['https://rvn.2miners.com/api/stats',
+                      'https://xzc.2miners.com/api/stats'], (res)=>{
+    return res.stats
+} ) 
+
+
+let mintpondPoolsAccounts = new poolApi('https://api.mintpond.com/v1/zcoin/miner/workers/a9UKiXi6FS3kmKpnyrB4YpiDShFcmyscXy',(res)=>{
+    return res.miner.workers
+})
+// this needs to be fixed :/
+twoMinersStatsIdx = ['rvn','xzc']
+
+twoMinersStats = {}
+let timeSince =  (date)=> {
+  var seconds = Math.floor((new Date() - date) / 1000);
+  var interval = Math.floor(seconds / 31536000);
+  if (interval > 1) {
+    return interval + " years";
+  }
+  interval = Math.floor(seconds / 2592000);
+  if (interval > 1) {
+    return interval + " months";
+  }
+  interval = Math.floor(seconds / 86400);
+  if (interval > 1) {
+    return interval + " days";
+  }
+  interval = Math.floor(seconds / 3600);
+  if (interval > 1) {
+    return interval + " hours";
+  }
+  interval = Math.floor(seconds / 60);
+  if (interval > 1) {
+    return interval + " minutes";
+  }
+  return Math.floor(seconds) + " seconds";
+}
+
+twoMinersPoolsAccounts.filter((p,idx)=>{
+    p.then((res)=>{
+        for(let rig in res){
+            var theRig = res[rig]
+            //lastbeat(unixts),hr(float),hr2(float),offline(bool)
+            let lastBlock = timeSince(new Date(theRig.lastBeat * 1000))
+            let theCoin = twoMinersStatsIdx[idx]
+            //console.log(theCoin + '\t' + idx + '\t' + rig)
+            if(typeof twoMinersStats[theCoin] == 'undefined'){
+                twoMinersStats[theCoin] = {}
+            }
+            if(typeof twoMinersStats[theCoin][rig] == 'undefined'){
+                twoMinersStats[theCoin][rig] = {}
+            }
+
+            twoMinersStats[theCoin][rig].lastBlock = lastBlock
+            
+            twoMinersStats[theCoin][rig].hr = (theRig.hr/1000000).toFixed(3)
+            twoMinersStats[theCoin][rig].hr2 = (theRig.hr2/1000000).toFixed(3)
+            twoMinersStats[theCoin][rig].online = !theRig.offline   
+        }
+    })
+})
+mintpondPoolsAccounts.then((res)=>{
+    console.log(res)
+})
+twoMinersPoolsStats.filter((p,idx)=>{
+     p.then((res)=>{
+        let lastBlock = timeSince(new Date(res.lastBlockFound * 1000))
+        if(typeof twoMinersStats[twoMinersStatsIdx[idx]] == 'undefined'){
+            twoMinersStats[twoMinersStatsIdx[idx]] = {}
+        }
+        twoMinersStats[twoMinersStatsIdx[idx]].lastBlock = lastBlock
+        console.log(twoMinersStats)
+     }
+    )
+ })
+}
+
+getPools()
 NicehashData = {} 
 //require("./exchange");
 
@@ -229,6 +317,7 @@ if(typeof config.hiveosAccessToken != 'undefined' && typeof config.hiveosLogin !
    
         getAllWorkersLoop()
         var hiveMainInterval = setInterval(function(){getAllWorkersLoop()},7 * 1000)
+        var poolsInterval = setInterval(function(){getPools()},3*1000)
         // trade ogre interval 30 seconds?
         if(typeof tradeOgre != 'undefined' && tradeOgre && typeof tradeOgre.main_loop == 'function'){
             tradeOgre.main_loop()
@@ -279,6 +368,11 @@ if(typeof config.hiveosAccessToken != 'undefined' && typeof config.hiveosLogin !
         })
     //}
 
+        app.get('/2MinersData', function(request, response) {
+            response.setHeader('Content-Type', 'application/json');
+            //console.log(hiveMiners)
+            response.send(JSON.stringify(twoMinersStats));
+        })
     if(typeof openWeather != 'undefined' && openWeather){
         app.get('/openWeather', function(request, response) {
             response.setHeader('Content-Type', 'application/json');
