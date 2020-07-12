@@ -145,7 +145,9 @@
             var selectedCard=''
             function writeToDom(id,data){
                 var docElement = document.getElementById(id)
-                docElement.innerHTML=''
+                if(typeof data != 'undefined'){
+                    docElement.innerHTML=''
+                }
                 if(typeof data != 'undefined' && typeof data.filter == 'function'){
                     data.filter(function(o){
                         docElement.innerHTML += o
@@ -802,31 +804,31 @@
             }
 
             getTwoMinersApi = function(){
-                console.log("GET TWO MINERS API")
                 let endPoint = '/2MinersData'
                 $.getJSON(endPoint,function(data){
                     if(typeof data == 'object' && data){
                           let output = ['<b>2Miners</b>']
 
                         for(let coin in data){
-                            console.log(coin)
                             let coinSet = data[coin]
-                            console.log(coinSet)
+                  
                             for(let fieldName in coinSet){
                                 if(fieldName != 'lastBlock'){
                                     // this is a rig!
                                     let rigName = fieldName
                                     let aRig = coinSet[fieldName]
                                     if(aRig.online){
-                                        output.push('<tr><td>'+rigName+'</td><td>'+aRig.hr +'&nbsp; mh/s</td><td>'+coin+'</td><td>&nbsp;</td><td>&nbsp;</td></tr>')
+                                        output.push('<tr><td>'+rigName+'</td><td>'+aRig.hr +'&nbsp; mh/s</td><td>'+returnCoinImgPath(coin)+'</td><td>&nbsp;</td><td>&nbsp;</td></tr>')
                                     }
                                 }else{
+                                    let lastBlock = coinSet[fieldName]
+                                       output.push('<tr><td>'+returnCoinImgPath(coin)+'</td><td>'+lastBlock +' ago</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td></tr>')
                                     // last block process elsewhere prolly
                                 }
                             }
                         }
                         if(output.length > 1){
-                         writeToDom('twoMinersData','<table><tbody>'+output.join('\n')+'</tbody></table>')
+                          writeToDom('twoMinersData','<table><tbody>'+output.join('\n')+'</tbody></table>')
                              //  let permitFields = ['rigName','speedAccepted','algorithm','difficulty','profitability']
                         }
                              
@@ -933,7 +935,6 @@
                     getNicehashApi()
                 },1000 * 15)
                 dataInt4 = setInterval(function(){
-                    console.log('datainit 4')
                     getTwoMinersApi()
                 },1000 * 3)
             }else{

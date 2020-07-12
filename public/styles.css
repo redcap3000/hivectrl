@@ -50,11 +50,12 @@ clear:left;
 	list-style-type: none;	
 }
 
-#hiveWorkersData,#hiveFarmData,#hiveHashrateData,#nicehashData{
+#hiveWorkersData,#hiveFarmData,#hiveHashrateData,#nicehashData,#twoMinersData{
 	float:right;
 	width:80%;
 	margin:1%;
 }
+
 #openWeatherData td{
 	width:84px;
 }
@@ -98,8 +99,8 @@ clear:left;
 	text-align:right;
 }
 .coinImg{
-	height:10px;
-	width:10px;
+	height:20px;
+	width:20px;
 }
 td.iTable {
 	float:left;

@@ -82,7 +82,7 @@ twoMinersPoolsStats.filter((p,idx)=>{
             twoMinersStats[twoMinersStatsIdx[idx]] = {}
         }
         twoMinersStats[twoMinersStatsIdx[idx]].lastBlock = lastBlock
-        console.log(twoMinersStats)
+        //console.log(twoMinersStats)
      }
     )
  })
