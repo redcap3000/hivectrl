@@ -13,6 +13,7 @@
          <script type="text/javascript" src="hive.js"></script>
          <script type="text/javascript" src="nicehash.js"></script>
          <script type="text/javascript" src="twominers.js"></script>
+          <script type="text/javascript" src="intervalManager.js"></script>
     </head>
     <body>
     <div id="topBar">
@@ -47,13 +48,15 @@
             var selectedCardIdxs=[]
             var selectedWorkerId=0
             var selectedCard=''
-          
+
+            var intervals = new intervalManager(
+                [1000 * 10,1000 * 60 * 5,1000 * 15,1000 * 3],
+                [ getHiveData,getOpenWeather,getNicehashApi,getTwoMinersApi]
+            )
+            intervals.startAll()
             hisHash={}
-           
-            getHiveData()
-            getOpenWeather()
-            getNicehashApi()
-            // listen to changes initated by click handler
+    
+            /*
             setInterval(
                 function(){
                     if(selectedCardIdxs.length > 0){
@@ -78,25 +81,8 @@
                         writeToDom('hiveSelectedCard',selectedCard)
                     }
                 },1000
-            )
-            if(getData === true){
-                
-                dataInt = setInterval(function(){
-                    getHiveData()
-                },1000 * 10)
-                dataInt2 = setInterval(function(){
-                    getOpenWeather()
-                },1000 * 60 * 5)
-                dataInt3 = setInterval(function(){
-                    getNicehashApi()
-                },1000 * 15)
-                dataInt4 = setInterval(function(){
-                    getTwoMinersApi()
-                },1000 * 3)
-            }else{
-                dataInt = false
-                dataInt2 = false
-            }
+            )*/
+          
         </script>
 	
     <div id="bottomBar">

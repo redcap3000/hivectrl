@@ -1,6 +1,7 @@
 getOpenWeather = function(){
 let endPoint = '/openWeather'
 $.getJSON(endPoint,function(data){
+    console.log('getopenweather')
     if(typeof data == 'object' && data){
         let current = (typeof data.current != 'undefined'?data.current : false)
         let currentHourly = (typeof data.hourly != 'undefined' ? data.hourly : false)
