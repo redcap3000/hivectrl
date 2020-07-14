@@ -1,25 +1,35 @@
 //import config from './config'
-var NicehashV2API = require('./nicehashV2API.js');
 
+process.on('SIGTERM', () => {
+    console.info('SIGTERM signal received.');
+});
+process.on('SIGINT', () => {
+    console.info('SIGINT signal received.');
+    //onShutdown()
+    process.exit()
+});
+
+var NicehashV2API = require('./nicehashV2API.js');
 var poolApi = require('./poolApi.js');
 
 // POOLS?
 let getPools = ()=>{
 
-
 let twoMinersPoolsAccounts = new poolApi(['https://rvn.2miners.com/api/accounts/RGuttSk2qyFDSdwbhwxSXR5G9wU21gYkdh',
-                      'https://xzc.2miners.com/api/accounts/a9UKiXi6FS3kmKpnyrB4YpiDShFcmyscXy'], (res)=>{
+                                          'https://xzc.2miners.com/api/accounts/a9UKiXi6FS3kmKpnyrB4YpiDShFcmyscXy'], 
+  (res)=>{
     return res.workers
 } ) 
 let twoMinersPoolsStats = new poolApi(['https://rvn.2miners.com/api/stats',
-                      'https://xzc.2miners.com/api/stats'], (res)=>{
+                                       'https://xzc.2miners.com/api/stats'], 
+  (res)=>{
     return res.stats
 } ) 
 
-
-let mintpondPoolsAccounts = new poolApi('https://api.mintpond.com/v1/zcoin/miner/workers/a9UKiXi6FS3kmKpnyrB4YpiDShFcmyscXy',(res)=>{
+let mintpondPoolsAccounts = new poolApi('https://api.mintpond.com/v1/zcoin/miner/workers/a9UKiXi6FS3kmKpnyrB4YpiDShFcmyscXy',
+  (res)=>{
     return res.miner.workers
-})
+  })
 // this needs to be fixed :/
 twoMinersStatsIdx = ['rvn','xzc']
 
@@ -67,8 +77,8 @@ twoMinersPoolsAccounts.filter((p,idx)=>{
 
             twoMinersStats[theCoin][rig].lastBlock = lastBlock
             
-            twoMinersStats[theCoin][rig].hr = (theRig.hr/1000000).toFixed(3)
-            twoMinersStats[theCoin][rig].hr2 = (theRig.hr2/1000000).toFixed(3)
+            twoMinersStats[theCoin][rig].hr = (theRig.hr/1000000).toFixed(2)
+            twoMinersStats[theCoin][rig].hr2 = (theRig.hr2/1000000).toFixed(2)
             twoMinersStats[theCoin][rig].online = !theRig.offline   
         }
     })
@@ -92,19 +102,6 @@ twoMinersPoolsStats.filter((p,idx)=>{
 
 getPools()
 NicehashData = {} 
-//require("./exchange");
-
-
-process.on('SIGTERM', () => {
-    console.info('SIGTERM signal received.');
-});
-process.on('SIGINT', () => {
-    console.info('SIGINT signal received.');
-    //onShutdown()
-    process.exit()
-});
-
-
 //check for env vars first
 fromEnv=false
 if(typeof process.env.hiveosAccessToken != 'undefined'){
@@ -150,9 +147,7 @@ if(!fromEnv){
     }
 }
 
-
 if(typeof config.nicehashKey != 'undefined' && typeof config.nicehashSecret != 'undefined' && typeof config.nicehashOrgId != 'undefined'){
-   
     setInterval(function(){
     // FIX THIS turn into function!
     //    console.log("Getting nicehash from interval 10000 seconds")
@@ -168,7 +163,6 @@ if(typeof config.nicehashKey != 'undefined' && typeof config.nicehashSecret != '
             NicehashData[key] = r
         }
     // get server time - required
-
     api.getTime()
         // get algo settings
         /// api/v2/mining/rigs/activeWorkers/
@@ -213,7 +207,6 @@ if(typeof config.nicehashKey != 'undefined' && typeof config.nicehashSecret != '
              let totalFeeAmount = 0.0
              list.filter(function(item,idx){
                  let newObj = {}
-
                  for(let k in item){
                      if(omitFields.indexOf(k) == -1){
                          // change created into datestamp?
@@ -242,7 +235,6 @@ if(typeof config.nicehashKey != 'undefined' && typeof config.nicehashSecret != '
              // first day/last day?
              //console.log("Max date : " + new Date( Math.max.apply(Math, newList.map(function(o) { return o.created; }))* 1000 ) )
              //console.log("Min date : " + new Date( Math.min.apply(Math, newList.map(function(o) { return o.created; }))* 1000 ) )
-             
              replaceNHData('payouts',{
                  totalPay : totalAmount.toFixed(8),
                  totalFees : totalFeeAmount.toFixed(8),
@@ -252,10 +244,7 @@ if(typeof config.nicehashKey != 'undefined' && typeof config.nicehashSecret != '
                  }
              })
          })
-
-
-///v2/mining/rigs/payouts/
-
+        ///v2/mining/rigs/payouts/
         .catch(err => {
             if(err && err.response) log(err.response.request.method,err.response.request.uri.href);
             log('ERROR', err.error || err);
@@ -265,9 +254,6 @@ if(typeof config.nicehashKey != 'undefined' && typeof config.nicehashSecret != '
     console.log("Problem loading nicehashKey/secret")
     console.log(config)
 }
-
-
-
 // to do /config validator
 // steps - on boot - check for change to card order
 // on storage store a reference that holds the name of the card + config settings
@@ -308,15 +294,11 @@ if(typeof config.hiveosAccessToken != 'undefined' && typeof config.hiveosLogin !
         getFlightsheets().then(function(){
               //  console.log(hiveFlightsheets)
         }).catch(defaultError)
-
         let getAllWorkersLoop = function(){
-            
             return getFarmWorkersGpus()
-
             // i dont think i need this...
           
         }
-   
         getAllWorkersLoop()
         var hiveMainInterval = setInterval(function(){getAllWorkersLoop()},7 * 1000)
         var poolsInterval = setInterval(function(){getPools()},3*1000)
@@ -327,7 +309,6 @@ if(typeof config.hiveosAccessToken != 'undefined' && typeof config.hiveosLogin !
         if(typeof openWeather != 'undefined' && openWeather && typeof openWeather.main_loop == 'function'){
             openWeather.main_loop()
         }
-
     })
 
     app.get('/flightsheets',function(request,response){
@@ -361,29 +342,26 @@ if(typeof config.hiveosAccessToken != 'undefined' && typeof config.hiveosLogin !
             response.send(JSON.stringify(r));
         })
     }
+    app.get('/nicehashData', function(request, response) {
+        response.setHeader('Content-Type', 'application/json');
+        //console.log(hiveMiners)
+        response.send(JSON.stringify(NicehashData));
+    })
 
-    //if(typeof config.nicehashKey != 'undefined' && typeof config.nicehashSecret != 'undefined' && typeof config.nicehashOrgId != 'undefined'){
-        app.get('/nicehashData', function(request, response) {
-            response.setHeader('Content-Type', 'application/json');
-            //console.log(hiveMiners)
-            response.send(JSON.stringify(NicehashData));
+    app.get('/2MinersData', function(request, response) {
+        response.setHeader('Content-Type', 'application/json');
+        //console.log(hiveMiners)
+       // console.log(twoMinersStats)
+        let enforce = {}
+        twoMinersStatsIdx.filter((o)=>{
+            if(typeof twoMinersStats[o] != 'undefined'){
+                enforce[o]={}
+                enforce[o]=twoMinersStats[o]    
+            }
         })
-    //}
 
-        app.get('/2MinersData', function(request, response) {
-            response.setHeader('Content-Type', 'application/json');
-            //console.log(hiveMiners)
-           // console.log(twoMinersStats)
-            let enforce = {}
-            twoMinersStatsIdx.filter((o)=>{
-                if(typeof twoMinersStats[o] != 'undefined'){
-                    enforce[o]={}
-                    enforce[o]=twoMinersStats[o]    
-                }
-            })
-
-            response.send(JSON.stringify(enforce));
-        })
+        response.send(JSON.stringify(enforce));
+    })
     if(typeof openWeather != 'undefined' && openWeather){
         app.get('/openWeather', function(request, response) {
             response.setHeader('Content-Type', 'application/json');
@@ -418,7 +396,6 @@ if(typeof config.hiveosAccessToken != 'undefined' && typeof config.hiveosLogin !
                             response.end(JSON.stringify(response.data))
                         }
                     })
-             
         }
         return response.end(JSON.stringify(false))
     })
@@ -435,7 +412,6 @@ if(typeof config.hiveosAccessToken != 'undefined' && typeof config.hiveosLogin !
     hiveFarms = {}
     hiveWorkers={}
     hiveFlightsheets={}
-
     var mainFarmId = 0
     // returns json or a rejected promise
     var normalPromiseCb = function(r){
@@ -454,7 +430,6 @@ if(typeof config.hiveosAccessToken != 'undefined' && typeof config.hiveosLogin !
             return false
         }
     }
-
     function doLogin (login, password) {
         return  fetch(`${baseUrl}/auth/login`, {
             method: 'POST',
@@ -499,15 +474,12 @@ if(typeof config.hiveosAccessToken != 'undefined' && typeof config.hiveosLogin !
                                 catch(defaultError));
                 })
                 return data
-              
             }else{
-           
                 return hiveFarms
             }
             return r
         });
     }
-    
     function getFarms() {
         return fetchUrl('farms').then(normalPromiseCb)
     }
@@ -543,7 +515,6 @@ if(typeof config.hiveosAccessToken != 'undefined' && typeof config.hiveosLogin !
                 })
             }
             if(typeof farmWorkersGpus != 'undefined' && farmWorkersGpus.length > 0){
-
                 return Promise.all(farmWorkersGpus)
                 .then(
                     function(vals){
@@ -589,10 +560,8 @@ if(typeof config.hiveosAccessToken != 'undefined' && typeof config.hiveosLogin !
                                             worker[key]=d[key]
                                         }else if(key == 'gpu_info'){
                                             var gpu_info = d[key]
-                                           
                                             //  give ref keys to combine hashrates clientside
                                              gpu_info.filter(function(gpu){
-                                          
                                                 var newGpu = {
                                                     idx: gpu.index,
                                                     bus:gpu.bus,
@@ -617,8 +586,9 @@ if(typeof config.hiveosAccessToken != 'undefined' && typeof config.hiveosLogin !
                                                     hiveMiners[gpu.worker]=[]
                                                 }
                                                 var farmId = d.farm_id
+
                                                 var workerId = d.id
-                                               
+                                                var workerName = d.name
                                                 if(typeof gpu_stats[gpu.bus_id] != 'undefined'){
                                                     minimumGpuData.power = gpu_stats[gpu.bus_id]
                                                 }else{
@@ -634,6 +604,7 @@ if(typeof config.hiveosAccessToken != 'undefined' && typeof config.hiveosLogin !
                                                     }
                                                     if(typeof hiveFarms[farmId]['workers'][workerId] == 'undefined'){
                                                         hiveFarms[farmId]['workers'][workerId] = {}
+                                                        hiveFarms[farmId]['workers'][workerId].name = workerName
                                                     }
                                                     if(typeof hiveFarms[farmId]['workers'][workerId]['gpus'] == 'undefined'){
                                                         hiveFarms[farmId]['workers'][workerId]['gpus']={}
@@ -675,7 +646,6 @@ if(typeof config.hiveosAccessToken != 'undefined' && typeof config.hiveosLogin !
                         // HIVEOS API U NEED TO FIX YOURSELF. This is why people are
                         // running away from your solution because your web UI is barely functional
                         // which would explain the API , heaps and heaps of unneeded abstractions.
-                       
                         GPUS.filter(function(g){
                             var newG = g
                             var busN = g.bus_number+''
@@ -698,8 +668,6 @@ if(typeof config.hiveosAccessToken != 'undefined' && typeof config.hiveosLogin !
                                     hiveFarms[farmId]['workers'][workerId]['gpus'][g.model][gpuMatch].power = thePower
                                 }
 //                                hiveFarms[farmId]['workers'][workerId]['gpus']
-                            
-                              
                             }
                             // not working since i dont have reference to workerId at this point?!
                             final.push(newG)
@@ -730,7 +698,6 @@ if(typeof config.hiveosAccessToken != 'undefined' && typeof config.hiveosLogin !
             return farms
         }).then(function(farms){
             var sheets= []
-
             farms.filter(function(f){
                 fetchUrl('farms/'+f+'/fs',true).then(function(r,e){
                     //console.log('fetch farms flight sheet' + f + ' error?:' + e)
@@ -740,7 +707,6 @@ if(typeof config.hiveosAccessToken != 'undefined' && typeof config.hiveosLogin !
                     sheets.push(r)
                     //console.log(r)
                     return r.json()
-
                     //return r
                 }).then(function(data){
                     var r = {}
@@ -767,10 +733,8 @@ if(typeof config.hiveosAccessToken != 'undefined' && typeof config.hiveosLogin !
                                     newItm[itmKey]= item[itmKey]
                                 }
                                 items.push(newItm)
-                                
                             }    
                         })
-                        
                         var filtered = { 
                             name: d.name,
                             is_favorite:false,
@@ -789,11 +753,8 @@ if(typeof config.hiveosAccessToken != 'undefined' && typeof config.hiveosLogin !
                 }).catch(function(err){
                     console.log(err)
                 })
-
             })
-          
         })
-      
         //return fetchUrl('farms/'+farmId+'/fs').then(normalPromiseCb)
     }
 
@@ -840,7 +801,6 @@ if(typeof config.hiveosAccessToken != 'undefined' && typeof config.hiveosLogin !
             return getFlightsheets().then(function(){
                 return hiveFlightsheets
             }).catch(defaultError)
-
         },
         getAllLocalData : function(){
             return{
@@ -862,7 +822,6 @@ if(typeof config.hiveosAccessToken != 'undefined' && typeof config.hiveosLogin !
             return getFarmWorkersGpus().catch(defaultError)
         },
         launchUrl : function(){
-
         }
     }
 }else{

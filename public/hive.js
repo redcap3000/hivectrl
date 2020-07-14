@@ -3,11 +3,6 @@
     $.getJSON(endPoint,function(data){
         if(typeof data != 'undefined'){
             var minerStats= data.minerstats
-            /*
-                {467468: Array(2)}467468: Array(2)0: algo: "cuckaroo29s"bus_numbers: (6) [1, 4, 5, 12, 13, 16]coin: "XWP"fans: (6) [33, 26, 38, 26, 22, 22]hashes: (6) [0.0046500000000000005, 0.00319, 0.00459, 0.00309, 0.00316, 0.00315]miner: "gminer"temps: (6) [62, 66, 63, 66, 64, 64]__proto__: Object1: {miner: "cryptodredge", algo: "mtp", coin: "XZC", hashes: Array(5), temps: Array(5), …}length: 2__proto__: Array(0)__proto__: Object
-
-            */
-            // reform minerStats for easier referencing ?
             var minerStatsRef={}
             var hashratesByCoinRef={}
             for(var farm in data.farms){
@@ -15,6 +10,7 @@
                 var miners_stats =[]
                  for(var workerId in minerStats){
                     var miners = minerStats[workerId]
+
                     miners.filter(function(w){
                         if(typeof minerStatsRef[workerId] == 'undefined'){
                             minerStatsRef[workerId] ={}
@@ -101,16 +97,18 @@
                   //  'Idle Power Draw',
                     'Name',
                     //'Price/Watt',
-                    'Total Rigs',
                     'Online',
+                    'Total Rigs',
+
                     //'Tz',
                 ]
                 var values = [
              //   f.hardware_power_draw,
                 f.name,
                 //f.power_price,
-                f.rigs_count,
                 f.stats.workers_online,
+
+                f.rigs_count,
                 //f.timezone
                 //f.hashrates_by_coin.coin,
                 //f.hashrates_by_coin.algo,
@@ -122,7 +120,11 @@
                     if(keyName == 'Name'){
                         output.push('<h4>')
                     }
-                    output.push( (keyName != 'Name' && keyName != 'Tz' && keyName != 'Online' ? keyName + ' : ' : (keyName == 'Online' ? '/' : ' '))+' ' +val )
+                    output.push( (keyName != 'Name' && keyName != 'Tz' && keyName != 'Total Rigs' ? keyName + ' : ' : (keyName == 'Total Rigs' ? '/' : ' '))+' ' +val )
+                    if(keyName == 'Name'){
+                        output.push('<br/>')
+                    }
+
                     if(keyName == 'Tz'){
                         output.push('</h4>')
                     }
@@ -157,6 +159,40 @@
                     })
                     hashrates_by_coin.push('</span>')
                 }
+
+                var hiveStats = []
+                var hiveStatsFields = [
+                    'workers_total',
+                    'workers_online',
+                    'workers_offline',
+                    'workers_overheated',
+                    'workers_overloaded',
+                    'gpus_total',
+                    'gpus_online',
+                    'gpus_offline',
+                    'gpus_overheated',
+                    'power_draw',
+                    'power_cost',
+                    'asr'
+                ]
+                var hiveStats = f.stats
+
+                var hiveStatsString = hiveStats.workers_online + ' of '+ hiveStats.workers_total + ' online<br/> ' + hiveStats.power_draw + ' watts'
+                /*
+                var hiveStatsWorkersGroup = 
+                console.log(f.stats)
+                for(var stat in f.stats){
+                    if(hiveStatsFields.indexOf(stat) > -1){
+                        var t = stat.split('_')
+                        
+                        var keyName = t.join(' ')
+                        var group = t[1]
+                        if(group == 'workers')
+                        var statVal = f.stats[stat]
+                        hiveStats.push('<span>'+keyName + ' ' + statVal +'</span>')
+                    }
+                }*/
+
                 var workers_digest=[]
                 var workers_ref={}
                 var workerClickGuids = []
@@ -169,14 +205,11 @@
                         reOrder[wId]={}
                         reOrder[wId]=f.workers[wId]
                     }
-                    //console.log(theWorker)
                 }
-                //if(reOrder.length !== f.workers.length){
                 f.workers=reOrder
-                //}
                 for(var workerId in f.workers){
                     var theWorker = f.workers[workerId]
-                    workers_digest.push('<h3>'+workerId+'</h3>')
+                    workers_digest.push('<h3>'+theWorker.name+'</h3>')
                     for(var gpuModel in theWorker.gpus){
                         var wrk = theWorker.gpus[gpuModel]
                         // need to cross reference workerId here..
@@ -203,9 +236,7 @@
                                 var cHashRate=convertHashrate(cardStats.hashes,true)
                                 var cHashRateString = convertHashrate(cardStats.temps)
                                 var cTemp = w.power/parseFloat(convertHashrate(cardStats.hashes))
-
                                 // divide power by rate?
-
                                 var fanStyle = 'background-color:'+d3ColorCodeInverse(cardStats.fans)+';'
                                 if(typeof hashratesByCoinRef[cardStats.algo] != 'undefined' && typeof hashratesByCoinRef[cardStats.algo][cardStats.coin] != 'undefined'){
                                     // this is terrible.fix
@@ -281,7 +312,6 @@
                                     hashrateStyle+'">&nbsp;</td></tr>'+
                                     historicalHashrates
                                     +'</tbody></table>')
-
                             }else{
                                 //workers_digest.push('<ul><li><span>'+w.idx+'</span></li></ul>')
                             }
@@ -297,14 +327,47 @@
                             workers_ref[workerId][w.bus_number]=gpuModel
                         })
                     }
-                     // workers_digest.push('</ul>')
                 }
             }
-           
+            if(typeof hiveStatsString != 'undefined'){
+                           writeToDom('hiveStats',hiveStatsString)
+         
+            } 
             if(typeof hashrates_by_coin != 'undefined'){
                 if(hashrates_by_coin.length > 2){
                     writeToDom('hiveHashrateData',hashrates_by_coin.join('\n'))
                 }
+               
+                // process stats?
+                /*
+                    "stats": {
+                    "workers_total": 3,
+                    "workers_online": 2,
+                    "workers_offline": 0,
+                    "workers_overheated": 1,
+                    "workers_overloaded": 0,
+                    "workers_invalid": 0,
+                    "workers_low_asr": 0,
+                    "rigs_total": 3,
+                    "rigs_online": 2,
+                    "rigs_offline": 0,
+                    "gpus_total": 15,
+                    "gpus_online": 12,
+                    "gpus_offline": 1,
+                    "gpus_overheated": 2,
+                    "asics_total": 0,
+                    "asics_online": 0,
+                    "asics_offline": 0,
+                    "boards_total": 0,
+                    "boards_online": 0,
+                    "boards_offline": 0,
+                    "boards_overheated": 0,
+                    "cpus_online": 0,
+                    "power_draw": 1486,
+                    "power_cost": 0.28,
+                    "asr": 99.19
+                 
+                */
             }
             if(workers_digest.length > 2){
                 var docElement = document.getElementById('hiveWorkersData')

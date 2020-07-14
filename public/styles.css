@@ -2,16 +2,42 @@ body{
 	background-color:	#696969 ;
 	color:white;
 }
+#topBar{
+}
+#hiveHashrateData,#hiveFarmData{
+	float:right;
+	width:85%;
+	margin-right:2%;
+}
 
 h3,h4{
 	margin:0;
 	padding:0;
-	font-size:12px;
+	font-size:18px;
 }
 h3{
 	text-align: right;
 }
 h4{
+}
+
+#hiveFarmData{
+	width:100%;
+	text-align:center;
+	font-size:24px;
+	padding-bottom:8px;
+}
+.hrByCoin{
+
+	clear:both;
+}
+.hrByCoin h4{
+	font-size:16px;
+	padding-right:2px;
+}
+.hrByCoin img{
+	font-size:18px;
+	margin-left:4px;
 }
 img{
 	width:40px;
@@ -23,10 +49,7 @@ table{
 	  padding:0;
 	  float:left;
 }
-.hrByCoin{
-	width:100%;
-	clear:both;
-}
+
 
 td#hiveWorkersData {
 	height:10px;
@@ -50,7 +73,7 @@ clear:left;
 	list-style-type: none;	
 }
 
-#hiveWorkersData,#hiveFarmData,#hiveHashrateData,#nicehashData,#twoMinersData,#twoMinersDataLastBlocks{
+#hiveWorkersData,#hiveHashrateData,#nicehashData,#twoMinersData,#twoMinersDataLastBlocks{
 	float:right;
 	width:80%;
 	margin:1%;
@@ -59,7 +82,7 @@ clear:left;
 #openWeatherData td{
 	width:84px;
 }
-#hiveFarmData,#hiveHashrateData{
+#hiveHashrateData{
 	float:left;
 	width:80%;
 	margin:0;
